@@ -1,0 +1,138 @@
+﻿﻿@{
+    ViewData["Title"] = "Classes";
+    Layout = "~/Views/Shared/_Admin.cshtml";
+}
+@model List<FeeType>
+
+<style>
+    .installment-header {
+        color: #143a7a;
+        border-bottom: 2px solid #143a7a;
+        padding-bottom: 10px;
+        margin-bottom: 20px;
+    }
+
+    .btn-primary-custom {
+        background-color: #143a7a;
+        border-color: #143a7a;
+        color: white !important;
+        border-radius: 6px;
+        transition: all 0.3s;
+    }
+
+        .btn-primary-custom:hover {
+            background-color: #0d2a5a;
+            border-color: #0d2a5a;
+            transform: translateY(-2px);
+        }
+
+    .btn-danger-custom {
+        background-color: #b7223e;
+        border-color: #b7223e;
+        color: white !important;
+        transition: all 0.3s;
+    }
+
+        .btn-danger-custom:hover {
+            background-color: #9a1c34;
+            border-color: #9a1c34;
+            transform: translateY(-2px);
+        }
+
+    .table-custom {
+        border-radius: 8px;
+        overflow: hidden;
+        box-shadow: 0 4px 12px rgba(0,0,0,0.1);
+    }
+
+        .table-custom thead {
+            background-color: #143a7a;
+            color: white;
+        }
+
+        .table-custom th {
+            padding: 12px 15px;
+        }
+
+        .table-custom td {
+            padding: 10px 15px;
+            vertical-align: middle;
+        }
+
+        .table-custom tbody tr:nth-child(even) {
+            background-color: #f8f9fa;
+        }
+
+    .action-buttons .btn {
+        margin-right: 5px;
+        border-radius: 6px;
+    }
+
+    @@media (max-width: 768px) {
+        .header-row {
+            flex-direction: column;
+        }
+
+        .header-title, .header-button {
+            width: 100%;
+            text-align: left !important;
+        }
+
+        .header-button {
+            margin-top: 15px;
+        }
+    }
+</style>
+
+<div class="container p-3">
+    <div class="row pt-4 header-row">
+        <div class="col-md-6 col-12 header-title">
+            <h2 class="installment-header">
+                <i class="bi bi-list-check"></i> Fee Types List
+            </h2>
+        </div>
+        <div class="col-md-6 col-12 text-md-end header-button">
+            <a asp-controller="FeeType" asp-action="Create" class="btn btn-primary-custom">
+                <i class="bi bi-plus-circle"></i> &nbsp; Create New FeeType
+            </a>
+        </div>
+    </div>
+    <br /><br />
+
+    <div class="table-responsive">
+        <table class="table table-custom table-hover">
+            <thead>
+                <tr>
+                    <th>SN</th>
+                    <th>Fees Type Name</th>
+                    <th>Action</th>
+                </tr>
+            </thead>
+            <tbody>
+                @{
+                    int sn = 1;
+                }
+                @foreach (var feeType in Model)
+                {
+                    <tr>
+                        <td>@sn</td>
+                        <td width="50%">@feeType.Name</td>
+                        <td width="20%">
+                            <div class="action-buttons">
+                                <a asp-controller="FeeType" asp-action="Edit" asp-route-feeTypeId="@feeType.FeeTypeId"
+                                   class="btn btn-primary-custom btn-sm">
+                                    <i class="bi bi-pencil-square"></i> Edit
+                                </a>
+                                <a asp-controller="FeeType" asp-action="Delete" asp-route-feeTypeId="@feeType.FeeTypeId"
+                                   class="btn btn-danger-custom btn-sm">
+                                    <i class="bi bi-trash-fill"></i> Delete
+                                </a>
+                            </div>
+                        </td>
+                    </tr>
+                    sn++;
+                }
+            </tbody>
+        </table>
+    </div>
+</div>

@@ -1,0 +1,74 @@
+﻿﻿@{
+    ViewData["Title"] = "Fees Type";
+    Layout = "~/Views/Shared/_Admin.cshtml";
+}
+@model FeeType
+
+<style>
+    .edit-header {
+        color: #143a7a;
+        border-bottom: 2px solid #143a7a;
+        padding-bottom: 10px;
+        margin-bottom: 25px;
+    }
+
+    /* Reuse styles from Create.cshtml */
+    .form-label, .form-control, .text-danger, .form-container, .action-buttons {
+        /* Same as Create.cshtml */
+    }
+
+    .btn-update {
+        background-color: #143a7a;
+        border-color: #143a7a;
+        color: white !important;
+        padding: 8px 25px;
+        border-radius: 4px;
+        transition: all 0.3s;
+    }
+
+        .btn-update:hover {
+            background-color: #0d2a5a;
+            border-color: #0d2a5a;
+            transform: translateY(-1px);
+        }
+
+    .btn-back {
+        background-color: #b7223e;
+        border-color: #b7223e;
+        color: white !important;
+        padding: 8px 25px;
+        border-radius: 4px;
+        transition: all 0.3s;
+    }
+</style>
+
+<div class="container">
+    <h2 class="edit-header">
+        <i class="bi bi-pencil-square"></i> Edit Class Name
+    </h2>
+
+    <form method="post" asp-action="Edit">
+        <input type="hidden" asp-for="FeeTypeId" />
+
+        <div class="form-group">
+            <label asp-for="Name" class="form-label">Fee Name</label>
+            <input asp-for="Name" class="form-control" placeholder="Enter Fee  name" />
+            <span asp-validation-for="Name" class="text-danger"></span>
+        </div>
+        </br>
+        <div class="action-buttons">
+            <button type="submit" class="btn btn-update">
+                <i class="bi bi-check-circle"></i> Update
+            </button>
+            <a asp-action="Index" class="btn btn-back">
+                <i class="bi bi-arrow-left"></i> Back to List
+            </a>
+        </div>
+    </form>
+</div>
+
+@section Scripts {
+    @{
+        await Html.RenderPartialAsync("_ValidationScriptsPartial");
+    }
+}
