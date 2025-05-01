@@ -1,0 +1,396 @@
+﻿
+@model List<Student>
+
+@{
+    ViewData["Title"] = "Admin";
+    Layout = "~/Views/Shared/_Admin.cshtml";
+}
+
+<style>
+    .expenses-header {
+        color: #143a7a;
+        border-bottom: 2px solid #143a7a;
+        padding-bottom: 10px;
+        margin-bottom: 20px;
+    }
+
+    .search-container {
+        margin-bottom: 20px;
+        display: flex;
+        gap: 10px;
+    }
+
+    .filter-container {
+        display: flex;
+        gap: 15px;
+        margin-bottom: 15px;
+        align-items: center;
+        flex-wrap: wrap;
+    }
+
+    .filter-checkbox {
+        display: flex;
+        align-items: center;
+        gap: 5px;
+        cursor: pointer;
+    }
+
+    .search-input {
+        width: 100%;
+        padding: 10px 15px;
+        border: 1px solid #ced4da;
+        border-radius: 4px;
+        font-size: 16px;
+        background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='16' height='16' fill='%23143a7a' viewBox='0 0 16 16'%3E%3Cpath d='M11.742 10.344a6.5 6.5 0 1 0-1.397 1.398h-.001c.03.04.062.078.098.115l3.85 3.85a1 1 0 0 0 1.415-1.414l-3.85-3.85a1.007 1.007 0 0 0-.115-.1zM12 6.5a5.5 5.5 0 1 1-11 0 5.5 5.5 0 0 1 11 0z'/%3E%3C/svg%3E");
+        background-repeat: no-repeat;
+        background-position: right 15px center;
+        padding-right: 40px;
+    }
+
+    .table {
+        width: 100%;
+        border-collapse: collapse;
+        margin-bottom: 20px;
+    }
+
+        .table thead {
+            background-color: #143a7a;
+            color: white;
+            position: sticky;
+            top: 0;
+        }
+
+        .table th,
+        .table td {
+            padding: 12px 15px;
+            border-top: 1px solid #e9ecef;
+            vertical-align: top;
+        }
+
+    .table-striped tbody tr:nth-child(odd) {
+        background-color: rgba(20, 58, 122, 0.03);
+    }
+
+    .table-hover tbody tr:hover {
+        background-color: rgba(183, 34, 62, 0.05);
+    }
+
+    .btn-primary-custom {
+        background-color: #143a7a;
+        border-color: #143a7a;
+        color: white !important;
+        padding: 5px 10px;
+        border-radius: 4px;
+        transition: all 0.3s;
+    }
+
+        .btn-primary-custom:hover {
+            background-color: #0d2a5a;
+            border-color: #0d2a5a;
+        }
+
+    .btn-danger-custom {
+        background-color: #b7223e;
+        border-color: #b7223e;
+        color: white !important;
+        padding: 5px 10px;
+        border-radius: 4px;
+        transition: all 0.3s;
+    }
+
+        .btn-danger-custom:hover {
+            background-color: #9a1c34;
+            border-color: #9a1c34;
+        }
+
+    .no-results {
+        text-align: center;
+        padding: 20px;
+        color: #b7223e;
+        font-style: italic;
+        display: none;
+    }
+
+    .expanded-column {
+        min-width: 350px !important;
+    }
+
+    .total-row {
+        font-weight: bold;
+        background-color: #f8f9fa !important;
+    }
+
+    .export-btn {
+        background-color: #28a745;
+        border-color: #28a745;
+        color: white !important;
+        padding: 10px 15px;
+        border-radius: 4px;
+        transition: all 0.3s;
+        white-space: nowrap;
+    }
+
+        .export-btn:hover {
+            background-color: #218838;
+            border-color: #1e7e34;
+        }
+
+    .highlight {
+        background-color: yellow;
+        font-weight: bold;
+        padding: 0 2px;
+    }
+
+    @@media (max-width: 768px) {
+        .table-responsive {
+            overflow-x: auto;
+        }
+
+        .table th,
+        .table td {
+            padding: 8px;
+            font-size: 14px;
+        }
+
+        .search-container {
+            flex-direction: column;
+        }
+
+        .export-btn {
+            width: 100%;
+        }
+    }
+</style>
+
+<div class="container-fluid">
+    <h2 class="expenses-header">
+        <i class="bi bi-receipt"></i> Student's List
+    </h2>
+
+    <div class="search-container">
+        <input type="text" id="clientSearch" class="search-input" placeholder="Search Student by name, phone, address..." />
+        <button id="exportBtn" class="export-btn">
+            <i class="bi bi-download"></i> Export Data
+        </button>
+    </div>
+
+    @* <div class="filter-container">
+        <div class="filter-checkbox">
+            <input type="checkbox" id="filterAll" checked class="site-filter" data-condition="All">
+            <label for="filterAll">All Sites</label>
+        </div>
+        <div class="filter-checkbox">
+            <input type="checkbox" id="filterRunning" class="site-filter" data-condition="Running">
+            <label for="filterRunning">Running Sites</label>
+        </div>
+        <div class="filter-checkbox">
+            <input type="checkbox" id="filterClosed" class="site-filter" data-condition="Closed">
+            <label for="filterClosed">Closed Sites</label>
+        </div>
+    </div> *@
+
+    <div class="table-responsive">
+        <table class="table table-striped table-hover" id="expensesTable">
+            <thead>
+                <tr>
+                    <th>S.N</th>
+                    <th>Student Name</th>
+                    <th>Address</th>
+                    <th>Parent's PhoneNumber</th>
+                    <th>Gender</th>
+                    <th>Class</th>
+                    <th>Status</th>
+                    <th>Actions</th>
+                </tr>
+            </thead>
+            <tbody>
+                @{
+                    int index = 1;
+                   
+                }
+                @foreach (var student in Model)
+                {
+                    <tr class="client-row">
+                        <td>@index</td>
+                            <td class="client-name">@student.FullName</td>
+                        <td class="client-address">@student.Address</td>
+                        <td class="client-phone">@student.ParentPhoneNumber</td>
+                        <td>@student.Gender</td>
+                        <td>@(student.SchoolClass?.ClassName ?? "No Class Assigned")</td>
+                        <td>@student.Status</td>
+                        <td>
+                            <div class="btn-group" role="group">
+                                    <a asp-action="EditClientExpenses" asp-route-id="@student.StudentId" class="btn btn-primary-custom btn-sm">
+                                    <i class="bi bi-pencil-square"></i> Edit
+                                </a>
+                                    <a href="#" class="btn btn-danger-custom btn-sm" onclick="confirmDelete('@student.StudentId')">
+                                    <i class="bi bi-trash-fill"></i> Delete
+                                </a>
+                            </div>
+                        </td>
+                    </tr>
+                    index++;
+                }
+                
+
+            </tbody>
+        </table>
+        <div id="noResults" class="no-results">
+            No matching clients found
+        </div>
+    </div>
+</div>
+
+<!-- Delete Modal -->
+<div class="modal fade" id="deleteModal" tabindex="-1" aria-labelledby="deleteModalLabel" aria-hidden="true">
+    <div class="modal-dialog">
+        <div class="modal-content">
+            <div class="modal-header bg-danger text-white">
+                <h5 class="modal-title" id="deleteModalLabel">Confirm Deletion</h5>
+                <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal" aria-label="Close"></button>
+            </div>
+            <div class="modal-body">
+                Are you sure you want to delete this client and all associated expenses?
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancel</button>
+                <a id="confirmDeleteBtn" class="btn btn-danger">Delete</a>
+            </div>
+        </div>
+    </div>
+</div>
+
+<script>
+    document.addEventListener('DOMContentLoaded', function () {
+        const searchInput = document.getElementById('clientSearch');
+        const clientRows = document.querySelectorAll('.client-row');
+        const noResults = document.getElementById('noResults');
+        const exportBtn = document.getElementById('exportBtn');
+        const siteFilters = document.querySelectorAll('.site-filter');
+
+        // Function to highlight search text
+        function highlightText(element, text) {
+            if (!text) {
+                element.innerHTML = element.textContent;
+                return;
+            }
+
+            const content = element.textContent;
+            const regex = new RegExp(text, 'gi');
+            const highlighted = content.replace(regex, match => `<span class="highlight">${match}</span>`);
+            element.innerHTML = highlighted;
+        }
+
+
+        function updateTotals() {
+            let totalDeal = 0, totalPayment = 0, totalDue = 0, totalExpenses = 0, totalRemaining = 0;
+
+            document.querySelectorAll('.client-row').forEach(row => {
+                if (row.style.display !== 'none') {
+                    totalDeal += parseFloat(row.dataset.dealAmount || 0);
+                    totalPayment += parseFloat(row.dataset.payment || 0);
+                    totalDue += parseFloat(row.dataset.due || 0);
+                    totalExpenses += parseFloat(row.dataset.expenses || 0);
+                    totalRemaining += parseFloat(row.dataset.remaining || 0);
+                }
+            });
+
+            document.getElementById('totalDeal').innerText = 'Rs.' + totalDeal.toFixed(2);
+            document.getElementById('totalPayment').innerText = 'Rs.' + totalPayment.toFixed(2);
+            document.getElementById('totalDue').innerText = 'Rs.' + totalDue.toFixed(2);
+            document.getElementById('totalExpenses').innerText = 'Rs.' + totalExpenses.toFixed(2);
+            document.getElementById('totalRemaining').innerText = 'Rs.' + totalRemaining.toFixed(2);
+        }
+
+        // Function to filter and search
+        function filterAndSearch() {
+            const searchTerm = searchInput.value.toLowerCase();
+            const activeFilters = Array.from(siteFilters)
+                .filter(filter => filter.checked)
+                .map(filter => filter.dataset.condition);
+
+            let hasResults = false;
+
+            clientRows.forEach(function (row) {
+                const clientName = row.querySelector('.client-name').textContent.toLowerCase();
+                const clientAddress = row.querySelector('.client-address').textContent.toLowerCase();
+                const clientPhone = row.querySelector('.client-phone').textContent.toLowerCase();
+                const siteCondition = row.dataset.siteCondition;
+                const matchesSearch = searchTerm === '' ||
+                    clientName.includes(searchTerm) ||
+                    clientAddress.includes(searchTerm) ||
+                    clientPhone.includes(searchTerm);
+
+                const matchesFilter = activeFilters.includes('All') ||
+                    activeFilters.includes(siteCondition);
+
+                if (matchesSearch && matchesFilter) {
+                    row.style.display = '';
+                    hasResults = true;
+                    if (searchTerm) {
+                        highlightText(row.querySelector('.client-name'), searchTerm);
+                        highlightText(row.querySelector('.client-address'), searchTerm);
+                        highlightText(row.querySelector('.client-phone'), searchTerm);
+                    } else {
+                        row.querySelector('.client-name').innerHTML = row.querySelector('.client-name').textContent;
+                        row.querySelector('.client-address').innerHTML = row.querySelector('.client-address').textContent;
+                        row.querySelector('.client-phone').innerHTML = row.querySelector('.client-phone').textContent;
+                    }
+                } else {
+                    row.style.display = 'none';
+                }
+            });
+
+            noResults.style.display = hasResults ? 'none' : 'block';
+            updateTotals();
+        }
+        searchInput.addEventListener('input', filterAndSearch);
+
+        siteFilters.forEach(filter => {
+            filter.addEventListener('change', function () {
+                if (this.dataset.condition === 'All' && this.checked) {
+                    document.querySelectorAll('.site-filter:not([data-condition="All"])').forEach(f => f.checked = false);
+                } else if (this.checked) {
+                    document.getElementById('filterAll').checked = false;
+                }
+
+                if (Array.from(siteFilters).every(f => !f.checked)) {
+                    document.getElementById('filterAll').checked = true;
+                }
+
+                filterAndSearch();
+            });
+        });
+
+        window.confirmDelete = function (clientId) {
+            const deleteModal = new bootstrap.Modal(document.getElementById('deleteModal'));
+            const confirmDeleteBtn = document.getElementById('confirmDeleteBtn');
+            confirmDeleteBtn.onclick = function () {
+                window.location.href = `/Construction/DeleteClientExpenses/${clientId}`;
+            };
+            deleteModal.show();
+        };
+        document.querySelectorAll('.toggle-column').forEach(button => {
+            const collapseId = button.getAttribute('data-target-id');
+            const columnClass = button.getAttribute('data-column-class');
+            const collapseElement = document.getElementById(collapseId);
+
+            collapseElement.addEventListener('show.bs.collapse', () => {
+                const td = button.closest('tr').querySelector(`.${columnClass}`);
+                td.classList.add('expanded-column');
+            });
+
+            collapseElement.addEventListener('hide.bs.collapse', () => {
+                const td = button.closest('tr').querySelector(`.${columnClass}`);
+                td.classList.remove('expanded-column');
+            });
+        });
+
+        $("#exportBtn").off("click").on("click", function () {
+            const Table = document.getElementById("expensesTable");
+            const profile = `ClientExpenses  Report`;
+            const parameter = `Client Name : ` + $("#clientSelect option:selected").text() + `<br />Year : <--br/>`;
+            fnExcelParmReport(Table, profile, parameter);
+        });
+    });
+</script>
