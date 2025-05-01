@@ -8,7 +8,7 @@ namespace SchoolBillingERP.Database
         public ApplicationDbContext(DbContextOptions<ApplicationDbContext> options): base(options)
         {
         }
-        public DbSet<Student> Students { get; set; }
+       // public DbSet<Student> Students { get; set; }
         public DbSet<SchoolClass> SchoolClasses { get; set; }
 
     }
