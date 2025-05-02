@@ -1,0 +1,168 @@
+﻿@model List<StudentFeeDetailsViewModel>
+
+@{
+    ViewData["Title"] = "Student Fees Report";
+    Layout = "~/Views/Shared/_Admin.cshtml";
+    var distinctMonths = Model.SelectMany(m => m.StudentFees).Select(f => f.Month).Distinct().OrderBy(m => m).ToList();
+}
+
+<style>
+    .page-content {
+        background-color: #f0f8ff;
+        padding: 20px;
+    }
+
+    th {
+        text-align: center;
+        background-color: #092655 !important;
+        color: white !important;
+        vertical-align: middle;
+    }
+
+    td {
+        text-align: center;
+        vertical-align: middle;
+    }
+
+    .highlight-green {
+        background-color: #d4edda;
+    }
+
+    .highlight-red {
+        background-color: #f8d7da;
+    }
+</style>
+
+<div class="page-content">
+    <div class="well clearfix">
+        <div class="row mb-3">
+            <div class="col-md-3">
+                <input type="text" placeholder="Search..." class="form-control Search">
+            </div>
+            <div class="col-md-5 d-flex align-items-center gap-3">
+                <label><input type="checkbox" class="status-filter" value="Running" checked> Running</label>
+                <label><input type="checkbox" class="status-filter" value="Closed"> Closed</label>
+                <label><input type="checkbox" class="status-filter" value="All"> All</label>
+            </div>
+            <div class="col-md-2">
+                <button class="btn btn-primary" id="btnExport" style="background-color: #092 !important;">
+                    <i class="bi bi-file-excel"></i> Export to Excel
+                </button>
+            </div>
+        </div>
+
+        <div class="table-responsive" style="max-height: 75vh; overflow-y: auto;">
+            <table class="table table-bordered table-striped table-hover" id="PayrollGenerateTable">
+                <thead>
+                    <tr>
+                        <th colspan="3">Student Info</th>
+                        <th colspan="@distinctMonths.Count">Payments Info</th>
+                        <th rowspan="2">Total Payable</th>
+                        <th rowspan="2" class="totalpaid">Total Paid</th>
+                        <th rowspan="2" class="totalrem">Remaining</th>
+                        <th rowspan="2">Status</th>
+                    </tr>
+                    <tr>
+                        <th>Sno</th>
+                        <th>Student Name</th>
+                        <th>Address</th>
+                        @foreach (var month in distinctMonths)
+                        {
+                            <th>@month</th>
+                        }
+                    </tr>
+                </thead>
+                <tbody>
+                    @{
+                        int sn = 1;
+                        var reversedStudents = Model.OrderByDescending(c => c.FullName).ToList();
+                    }
+                    @foreach (var student in reversedStudents)
+                    {
+                        decimal totalPayable = student.StudentFees.Sum(f => f.Amount);
+                        decimal totalPaid = student.StudentFees.Sum(f => f.Amount);
+                        decimal remaining = totalPayable - totalPaid;
+                        string status = totalPaid >= totalPayable ? "Closed" : "Running";
+                        string rowClass = status == "Closed" ? "highlight-green" : "highlight-red";
+                        <tr class="@rowClass" data-status="@status">
+                            <td>@sn</td>
+                            <td>@student.FullName</td>
+                            <td>@student.Address</td>
+                            @foreach (var month in distinctMonths)
+                            {
+                                var fee = student.StudentFees.FirstOrDefault(f => f.Month == month);
+                                <td>@(fee?.Amount ?? 0)</td>
+                            }
+                            <td class="payable">@totalPayable</td>
+                            <td class="paid">@totalPaid</td>
+                            <td class="remaining">@remaining</td>
+                            <td>
+                                <span class="badge @(status == "Closed" ? "bg-success" : "bg-warning")">@status</span>
+                            </td>
+                        </tr>
+                        sn++;
+                    }
+                </tbody>
+                <tfoot>
+                    <tr id="total-row-all" style="font-weight: bold; background: #d9edf7;">
+                        <td colspan="@(3 + distinctMonths.Count)">Total (All)</td>
+                        <td class="sum-payable"></td>
+                        <td class="sum-paid"></td>
+                        <td class="sum-remaining"></td>
+                        <td></td>
+                    </tr>
+                </tfoot>
+            </table>
+        </div>
+    </div>
+</div>
+
+@section Scripts {
+    <script>
+        function updateTotalRow() {
+            let totalPayable = 0, totalPaid = 0, totalRemaining = 0;
+            $("#PayrollGenerateTable tbody tr:visible").each(function () {
+                totalPayable += parseFloat($(this).find(".payable").text()) || 0;
+                totalPaid += parseFloat($(this).find(".paid").text()) || 0;
+                totalRemaining += parseFloat($(this).find(".remaining").text()) || 0;
+            });
+
+            $(".sum-payable").text(totalPayable.toFixed(2));
+            $(".sum-paid").text(totalPaid.toFixed(2));
+            $(".sum-remaining").text(totalRemaining.toFixed(2));
+        }
+
+        $(document).ready(function () {
+            $(".Search").on("keyup", function () {
+                const term = $(this).val().toLowerCase();
+                $("#PayrollGenerateTable tbody tr").each(function () {
+                    $(this).toggle($(this).text().toLowerCase().indexOf(term) > -1);
+                });
+                updateTotalRow();
+            });
+
+            $(".status-filter").on("change", function () {
+                const selected = $(".status-filter:checked").map(function () {
+                    return $(this).val();
+                }).get();
+
+                $("#PayrollGenerateTable tbody tr").each(function () {
+                    const rowStatus = $(this).data("status");
+                    if (selected.includes("All") || selected.includes(rowStatus)) {
+                        $(this).show();
+                    } else {
+                        $(this).hide();
+                    }
+                });
+                updateTotalRow();
+            });
+
+            $("#btnExport").on("click", function () {
+                alert("Export to Excel function goes here.");
+                // Add Excel export logic
+            });
+
+            updateTotalRow();
+        });
+    </script>
+}
