@@ -1,0 +1,493 @@
+﻿﻿
+@model EnableAuthenticatorViewModel
+@{
+    ViewData["Title"] = "Enable Two-Factor Authentication";
+    Layout = "~/Views/Shared/_Admin.cshtml";
+ }
+
+<div class="auth-container" >
+    <div class="auth-card" >
+        <div class="auth-header">
+            <h2 class="auth-title">Enable Two-Factor Authentication</h2>
+            <p class="auth-subtitle">Secure your account with an extra layer of protection</p>
+        </div>
+
+        <div class="auth-steps">
+            <div class="step active">
+                <div class="step-number">1</div>
+                <div class="step-text">Scan QR Code</div>
+            </div>
+            <div class="step">
+                <div class="step-number">2</div>
+                <div class="step-text">Enter Verification Code</div>
+            </div>
+        </div>
+
+        <div class="qr-section">
+            <div class="qr-container">
+                <p class="qr-instruction">Scan this QR code with your authenticator app:</p>
+                <div class="qr-code-wrapper">
+                    <img src="https://api.qrserver.com/v1/create-qr-code/?data=@Uri.EscapeDataString(Model.AuthenticatorUri)&size=200x200" 
+                         alt="QR Code" class="qr-code" />
+                    <div class="qr-overlay">
+                        <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                            <path d="M12 5v14M5 12h14"></path>
+                        </svg>
+                    </div>
+                </div>
+                <p class="qr-alternate">Popular authenticator apps:</p>
+                <div class="auth-apps">
+                    <div class="auth-app">
+                        <img src="https://play-lh.googleusercontent.com/NntMALIH4odanPPYSqUOXsX8zy_giiK2olJiqkcxwFIOOspVrhMi9Miv6LYdRnKIg-3R=w480-h960-rw" alt="Google Authenticator">
+                        <span>Google Authenticator</span>
+                    </div>
+                    <div class="auth-app">
+                        <img src="https://play-lh.googleusercontent.com/_1CV99jklLbXuun-6E7eCPR-sKKeZc602rhw_QHZz-qm7xrPdgWsJVc7NtFkkliI8No=w480-h960-rw" alt="Microsoft Authenticator">
+                        <span>Microsoft Authenticator</span>
+                    </div>
+                </div>
+            </div>
+
+            <div class="manual-key">
+                <p class="key-instruction">Can't scan the QR code? Enter this key manually:</p>
+                <div class="key-display">
+                    <code class="key-value">@Model.SharedKey</code>
+                    <button class="copy-btn" onclick="copyToClipboard('@Model.SharedKey')">
+                        <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                            <rect x="9" y="9" width="13" height="13" rx="2" ry="2"></rect>
+                            <path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"></path>
+                        </svg>
+                        Copy
+                    </button>
+                </div>
+            </div>
+        </div>
+
+        <form asp-action="EnableAuthenticator" method="post" class="auth-form">
+            <div class="form-group">
+                <label asp-for="Code" class="form-label">Verification Code</label>
+                <div class="input-group">
+                    <input asp-for="Code" class="form-input" placeholder="Enter 6-digit code" />
+                    <span class="input-icon">
+                        <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                            <rect x="3" y="11" width="18" height="11" rx="2" ry="2"></rect>
+                            <path d="M7 11V7a5 5 0 0 1 10 0v4"></path>
+                        </svg>
+                    </span>
+                </div>
+                <span asp-validation-for="Code" class="validation-error"></span>
+            </div>
+            <button type="submit" class="verify-btn">
+                Verify and Enable
+                <svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                    <polyline points="9 18 15 12 9 6"></polyline>
+                </svg>
+            </button>
+        </form>
+    </div>
+</div>
+
+<style>
+    :root {
+        --primary-color: #4361ee;
+        --primary-light: #e6e9ff;
+        --secondary-color: #3f37c9;
+        --text-color: #2b2d42;
+        --light-text: #8d99ae;
+        --border-color: #edf2f4;
+        --success-color: #4cc9f0;
+        --white: #ffffff;
+        --shadow: 0 4px 20px rgba(0, 0, 0, 0.08);
+    }
+
+    * {
+        box-sizing: border-box;
+        margin: 0;
+        padding: 0;
+        font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+    }
+
+    body {
+        background-color: #f8f9fa;
+        color: var(--text-color);
+        line-height: 1.6;
+       
+  
+
+    }
+
+    .auth-container {
+        display: flex;
+        justify-content: center;
+        align-items: flex-start; /* Align to top instead of center */
+        min-height: auto; /* Remove fixed viewport height */
+        padding: 0.0rem; /* Reduce padding */
+    }
+
+    .auth-card {
+        background: var(--white);
+        border-radius: 12px;
+        box-shadow: var(--shadow);
+        width: 100%;
+        max-width: 800px;
+        padding: 2.5rem;
+        margin: 0 auto;
+    }
+
+    .auth-header {
+        text-align: center;
+        margin-bottom: 2rem;
+    }
+
+    .auth-title {
+        font-size: 1.8rem;
+        font-weight: 700;
+        color: var(--text-color);
+        margin-bottom: 0.5rem;
+    }
+
+    .auth-subtitle {
+        color: var(--light-text);
+        font-size: 1rem;
+    }
+
+    .auth-steps {
+        display: flex;
+        justify-content: center;
+        margin-bottom: 2.5rem;
+    }
+
+    .step {
+        display: flex;
+        align-items: center;
+        margin: 0 1rem;
+        position: relative;
+    }
+
+    .step:not(:last-child):after {
+        content: '';
+        position: absolute;
+        left: 100%;
+        top: 0%;
+        width: 40px;
+        height: 1px;
+        background: var(--border-color);
+        transform: translateY(-50%);
+    }
+
+    .step-number {
+        width: 28px;
+        height: 28px;
+        border-radius: 50%;
+        background: var(--border-color);
+        color: var(--light-text);
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        font-weight: 600;
+        margin-right: 0.75rem;
+    }
+
+    .step-text {
+        color: var(--light-text);
+        font-weight: 500;
+    }
+
+    .step.active .step-number {
+        background: var(--primary-color);
+        color: var(--white);
+    }
+
+    .step.active .step-text {
+        color: var(--text-color);
+    }
+
+    .qr-section {
+        display: flex;
+        flex-wrap: wrap;
+        gap: 2rem;
+        margin-bottom: 2.5rem;
+    }
+
+    .qr-container {
+        flex: 1;
+        min-width: 250px;
+    }
+
+    .qr-instruction {
+        color: var(--text-color);
+        margin-bottom: 1.25rem;
+        font-weight: 500;
+    }
+
+    .qr-code-wrapper {
+        position: relative;
+        width: 200px;
+        height: 200px;
+        margin: 0 auto 1.5rem;
+        border: 1px solid var(--border-color);
+        border-radius: 8px;
+        padding: 10px;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+    }
+
+    .qr-overlay {
+        position: absolute;
+        top: 0;
+        left: 0;
+        right: 0;
+        bottom: 0;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        background: rgba(255, 255, 255, 0.8);
+        opacity: 0;
+        transition: opacity 0.2s;
+    }
+
+    .qr-code-wrapper:hover .qr-overlay {
+        opacity: 1;
+    }
+
+    .qr-overlay svg {
+        color: var(--primary-color);
+    }
+
+    .qr-alternate {
+        color: var(--light-text);
+        font-size: 0.9rem;
+        text-align: center;
+        margin-bottom: 1rem;
+    }
+
+    .auth-apps {
+        display: flex;
+        justify-content: center;
+        gap: 1.5rem;
+    }
+
+    .auth-app {
+        display: flex;
+        flex-direction: column;
+        align-items: center;
+        gap: 0.5rem;
+    }
+
+    .auth-app img {
+        width: 40px;
+        height: 40px;
+        object-fit: contain;
+    }
+
+    .auth-app span {
+        font-size: 0.8rem;
+        color: var(--light-text);
+    }
+
+    .manual-key {
+        flex: 1;
+        min-width: 250px;
+    }
+
+    .key-instruction {
+        color: var(--text-color);
+        margin-bottom: 1.25rem;
+        font-weight: 500;
+    }
+
+    .key-display {
+        display: flex;
+        align-items: center;
+        background: var(--border-color);
+        border-radius: 8px;
+        padding: 0.75rem 1rem;
+        margin-bottom: 1.5rem;
+    }
+
+    .key-value {
+        flex: 1;
+        font-family: 'Courier New', Courier, monospace;
+        font-size: 0.95rem;
+        word-break: break-all;
+    }
+
+    .copy-btn {
+        background: var(--primary-color);
+        color: white;
+        border: none;
+        border-radius: 6px;
+        padding: 0.4rem 0.75rem;
+        font-size: 0.85rem;
+        cursor: pointer;
+        display: flex;
+        align-items: center;
+        gap: 0.4rem;
+        transition: background 0.2s;
+    }
+
+    .copy-btn:hover {
+        background: var(--secondary-color);
+    }
+
+    .copy-btn svg {
+        width: 14px;
+        height: 14px;
+    }
+
+    .auth-form {
+        max-width: 400px;
+        margin: 0 auto;
+    }
+
+    .form-group {
+        margin-bottom: 1.5rem;
+    }
+
+    .form-label {
+        display: block;
+        margin-bottom: 0.5rem;
+        font-weight: 500;
+        color: var(--text-color);
+    }
+
+    .input-group {
+        position: relative;
+    }
+
+    .form-input {
+        width: 100%;
+        padding: 0.75rem 1rem 0.75rem 2.5rem;
+        border: 1px solid var(--border-color);
+        border-radius: 8px;
+        font-size: 1rem;
+        transition: border 0.2s;
+    }
+
+    .form-input:focus {
+        outline: none;
+        border-color: var(--primary-color);
+        box-shadow: 0 0 0 3px var(--primary-light);
+    }
+
+    .input-icon {
+        position: absolute;
+        left: 1rem;
+        top: 50%;
+        transform: translateY(-50%);
+        color: var(--light-text);
+    }
+
+    .validation-error {
+        display: block;
+        margin-top: 0.5rem;
+        color: #e63946;
+        font-size: 0.85rem;
+    }
+
+    .verify-btn {
+        width: 100%;
+        background: var(--primary-color);
+        color: white;
+        border: none;
+        border-radius: 8px;
+        padding: 0.9rem;
+        font-size: 1rem;
+        font-weight: 500;
+        cursor: pointer;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        gap: 0.5rem;
+        transition: background 0.2s;
+    }
+
+    .verify-btn:hover {
+        background: var(--secondary-color);
+    }
+
+    .verify-btn svg {
+        transition: transform 0.2s;
+    }
+
+    .verify-btn:hover svg {
+        transform: translateX(3px);
+    }
+
+    @@media (max-width: 768px) {
+        .auth-card {
+            padding: 1.5rem;
+        }
+
+        .qr-section {
+            flex-direction: column;
+            gap: 2rem;
+        }
+
+        .qr-container, .manual-key {
+            width: 100%;
+        }
+
+        .auth-steps {
+            flex-direction: column;
+            align-items: flex-start;
+            gap: 1rem;
+        }
+
+        .step {
+            margin: 0;
+        }
+
+        .step:not(:last-child):after {
+            display: none;
+        }
+    }
+
+   @@media (max-width: 480px) {
+        .auth-container {
+            padding: 1rem;
+        }
+
+        .auth-card {
+            padding: 1.25rem;
+        }
+
+        .auth-title {
+            font-size: 1.5rem;
+        }
+
+        .auth-apps {
+            flex-direction: column;
+            align-items: center;
+            gap: 1rem;
+        }
+
+       
+    }
+</style>
+
+<script>
+    function copyToClipboard(text) {
+        navigator.clipboard.writeText(text).then(function() {
+            const btn = event.currentTarget;
+            btn.innerHTML = `
+                <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                    <path d="M20 6L9 17l-5-5"></path>
+                </svg>
+                Copied!
+            `;
+            setTimeout(() => {
+                btn.innerHTML = `
+                    <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                        <rect x="9" y="9" width="13" height="13" rx="2" ry="2"></rect>
+                        <path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"></path>
+                    </svg>
+                    Copy
+                `;
+            }, 2000);
+        }).catch(function(err) {
+            console.error('Could not copy text: ', err);
+        });
+    }
+</script>

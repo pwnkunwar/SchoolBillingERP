@@ -1,0 +1,27 @@
+﻿
+@model SchoolBillingERP.Models.ChangeEmailViewModel
+@{
+    ViewData["Title"] = "Admin";
+    Layout = "~/Views/Shared/_Admin.cshtml";
+}
+
+
+<div class="container d-flex justify-content-center align-items-center" style="min-height: 80vh;">
+    <div class="card shadow-lg p-4" style="max-width: 500px; width: 100%; border-radius: 1rem;">
+        <h3 class="text-center mb-4 text-primary">Change Email Address</h3>
+        <form asp-action="ChangeEmail" method="post">
+            <div class="mb-3">
+                <label class="form-label fw-semibold">Current Email</label>
+                <input type="email" value="@Model.OldEmail" disabled class="form-control bg-light border-0" />
+                <input type="hidden" name="oldEmail" value="@Model.OldEmail" />
+            </div>
+            <div class="mb-3">
+                <label for="NewEmail" class="form-label fw-semibold">New Email</label>
+                <input type="email" name="newEmail" id="NewEmail" class="form-control" placeholder="Enter new email" required />
+            </div>
+            <div class="d-grid mt-4">
+                <button type="submit" class="btn btn-primary btn-lg">Update Email</button>
+            </div>
+        </form>
+    </div>
+</div>
