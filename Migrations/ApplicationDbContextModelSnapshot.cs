@@ -37,6 +37,21 @@ namespace SchoolBillingERP.Migrations
                     b.ToTable("FeeTypes");
                 });
 
+            modelBuilder.Entity("SchoolBillingERP.Models.FiscalYear", b =>
+                {
+                    b.Property<Guid>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("uniqueidentifier");
+
+                    b.Property<string>("Name")
+                        .IsRequired()
+                        .HasColumnType("nvarchar(max)");
+
+                    b.HasKey("Id");
+
+                    b.ToTable("FiscalYears");
+                });
+
             modelBuilder.Entity("SchoolBillingERP.Models.SchoolClass", b =>
                 {
                     b.Property<Guid>("ClassId")
@@ -58,30 +73,122 @@ namespace SchoolBillingERP.Migrations
                         .ValueGeneratedOnAdd()
                         .HasColumnType("uniqueidentifier");
 
+                    b.Property<string>("Address")
+                        .IsRequired()
+                        .HasColumnType("nvarchar(max)");
+
+                    b.Property<Guid>("ClassId")
+                        .HasColumnType("uniqueidentifier");
+
                     b.Property<string>("FullName")
+                        .IsRequired()
+                        .HasColumnType("nvarchar(max)");
+
+                    b.Property<string>("Gender")
+                        .IsRequired()
+                        .HasColumnType("nvarchar(max)");
+
+                    b.Property<string>("ParentPhoneNumber")
                         .IsRequired()
                         .HasColumnType("nvarchar(max)");
 
                     b.Property<Guid?>("SchoolClassClassId")
                         .HasColumnType("uniqueidentifier");
 
+                    b.Property<string>("Status")
+                        .IsRequired()
+                        .HasColumnType("nvarchar(max)");
+
                     b.HasKey("StudentId");
+
+                    b.HasIndex("ClassId");
 
                     b.HasIndex("SchoolClassClassId");
 
-                    b.ToTable("Student");
+                    b.ToTable("Students");
+                });
+
+            modelBuilder.Entity("SchoolBillingERP.Models.StudentFee", b =>
+                {
+                    b.Property<Guid>("StudentFeeId")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("uniqueidentifier");
+
+                    b.Property<decimal>("Amount")
+                        .HasColumnType("decimal(18,2)");
+
+                    b.Property<string>("FeeStatus")
+                        .IsRequired()
+                        .HasColumnType("nvarchar(max)");
+
+                    b.Property<Guid>("FeeTypeId")
+                        .HasColumnType("uniqueidentifier");
+
+                    b.Property<string>("FiscalYear")
+                        .IsRequired()
+                        .HasColumnType("nvarchar(max)");
+
+                    b.Property<string>("Month")
+                        .HasColumnType("nvarchar(max)");
+
+                    b.Property<string>("PaymentDate")
+                        .IsRequired()
+                        .HasColumnType("nvarchar(max)");
+
+                    b.Property<Guid>("StudentId")
+                        .HasColumnType("uniqueidentifier");
+
+                    b.HasKey("StudentFeeId");
+
+                    b.HasIndex("FeeTypeId");
+
+                    b.HasIndex("StudentId");
+
+                    b.ToTable("StudentFees");
                 });
 
             modelBuilder.Entity("SchoolBillingERP.Models.Student", b =>
                 {
+                    b.HasOne("SchoolBillingERP.Models.SchoolClass", "SchoolClass")
+                        .WithMany()
+                        .HasForeignKey("ClassId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
+
                     b.HasOne("SchoolBillingERP.Models.SchoolClass", null)
                         .WithMany("Students")
                         .HasForeignKey("SchoolClassClassId");
+
+                    b.Navigation("SchoolClass");
+                });
+
+            modelBuilder.Entity("SchoolBillingERP.Models.StudentFee", b =>
+                {
+                    b.HasOne("SchoolBillingERP.Models.FeeType", "FeeType")
+                        .WithMany()
+                        .HasForeignKey("FeeTypeId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
+
+                    b.HasOne("SchoolBillingERP.Models.Student", "Student")
+                        .WithMany("StudentFees")
+                        .HasForeignKey("StudentId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
+
+                    b.Navigation("FeeType");
+
+                    b.Navigation("Student");
                 });
 
             modelBuilder.Entity("SchoolBillingERP.Models.SchoolClass", b =>
                 {
                     b.Navigation("Students");
+                });
+
+            modelBuilder.Entity("SchoolBillingERP.Models.Student", b =>
+                {
+                    b.Navigation("StudentFees");
                 });
 #pragma warning restore 612, 618
         }
