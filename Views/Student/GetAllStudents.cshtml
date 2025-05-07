@@ -220,12 +220,13 @@
                         <td>@student.Status</td>
                         <td>
                             <div class="btn-group" role="group">
-                                    <a asp-action="EditClientExpenses" asp-route-id="@student.StudentId" class="btn btn-primary-custom btn-sm">
+                                <a asp-action="EditStudentDetails" asp-route-id="@student.StudentId" class="btn btn-primary-custom btn-sm">
                                     <i class="bi bi-pencil-square"></i> Edit
                                 </a>
-                                    <a href="#" class="btn btn-danger-custom btn-sm" onclick="confirmDelete('@student.StudentId')">
+                                <a href="javascript:void(0)" onclick="confirmDelete('@student.StudentId')" class="btn btn-danger-custom btn-sm">
                                     <i class="bi bi-trash-fill"></i> Delete
                                 </a>
+
                             </div>
                         </td>
                     </tr>
@@ -250,7 +251,7 @@
                 <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal" aria-label="Close"></button>
             </div>
             <div class="modal-body">
-                Are you sure you want to delete this client and all associated expenses?
+                Are you sure you want to delete this students and all associated details?
             </div>
             <div class="modal-footer">
                 <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancel</button>
@@ -261,6 +262,11 @@
 </div>
 
 <script>
+
+
+    function confirmDelete() {
+        return confirm("Are you sure you want to delete this client?");
+    }
     document.addEventListener('DOMContentLoaded', function () {
         const searchInput = document.getElementById('clientSearch');
         const clientRows = document.querySelectorAll('.client-row');
@@ -282,25 +288,6 @@
         }
 
 
-        function updateTotals() {
-            let totalDeal = 0, totalPayment = 0, totalDue = 0, totalExpenses = 0, totalRemaining = 0;
-
-            document.querySelectorAll('.client-row').forEach(row => {
-                if (row.style.display !== 'none') {
-                    totalDeal += parseFloat(row.dataset.dealAmount || 0);
-                    totalPayment += parseFloat(row.dataset.payment || 0);
-                    totalDue += parseFloat(row.dataset.due || 0);
-                    totalExpenses += parseFloat(row.dataset.expenses || 0);
-                    totalRemaining += parseFloat(row.dataset.remaining || 0);
-                }
-            });
-
-            document.getElementById('totalDeal').innerText = 'Rs.' + totalDeal.toFixed(2);
-            document.getElementById('totalPayment').innerText = 'Rs.' + totalPayment.toFixed(2);
-            document.getElementById('totalDue').innerText = 'Rs.' + totalDue.toFixed(2);
-            document.getElementById('totalExpenses').innerText = 'Rs.' + totalExpenses.toFixed(2);
-            document.getElementById('totalRemaining').innerText = 'Rs.' + totalRemaining.toFixed(2);
-        }
 
         // Function to filter and search
         function filterAndSearch() {
@@ -362,11 +349,11 @@
             });
         });
 
-        window.confirmDelete = function (clientId) {
+        window.confirmDelete = function (id) {
             const deleteModal = new bootstrap.Modal(document.getElementById('deleteModal'));
             const confirmDeleteBtn = document.getElementById('confirmDeleteBtn');
             confirmDeleteBtn.onclick = function () {
-                window.location.href = `/Construction/DeleteClientExpenses/${clientId}`;
+                window.location.href = `/Student/DeleteStudentDetails/${id}`;
             };
             deleteModal.show();
         };
@@ -387,10 +374,11 @@
         });
 
         $("#exportBtn").off("click").on("click", function () {
-            const Table = document.getElementById("expensesTable");
-            const profile = `ClientExpenses  Report`;
-            const parameter = `Client Name : ` + $("#clientSelect option:selected").text() + `<br />Year : <--br/>`;
-            fnExcelParmReport(Table, profile, parameter);
+            const table = document.getElementById("expensesTable");
+            const reportName = "Student_Report";
+            const parameter = `Exported on: ${new Date().toLocaleString()}`;
+            fnExcelParmReport(table, reportName, parameter);
         });
+
     });
 </script>
