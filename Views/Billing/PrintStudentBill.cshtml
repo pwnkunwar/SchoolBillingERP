@@ -1,0 +1,132 @@
+﻿@model StudentBill
+@{
+    ViewData["Title"] = "Bill Print";
+    Layout = "~/Views/Shared/_Admin.cshtml";
+}
+
+<!DOCTYPE html>
+<html>
+<head>
+    <meta charset="utf-8" />
+    <title>Invoice</title>
+    <style>
+        body {
+            font-family: 'Segoe UI', sans-serif;
+            margin: 30px;
+        }
+
+        h2, h4 {
+            text-align: center;
+            margin: 0;
+        }
+
+        table {
+            width: 100%;
+            border-collapse: collapse;
+            margin-top: 15px;
+        }
+
+        th, td {
+            border: 1px solid black;
+            padding: 6px;
+            text-align: left;
+        }
+
+        .header-table td {
+            border: none;
+        }
+
+        .no-border {
+            border: none !important;
+        }
+
+        .footer {
+            margin-top: 20px;
+        }
+
+        .print-button {
+            margin-top: 20px;
+            text-align: center;
+        }
+
+        @@media print {
+            .print-button {
+                display: none;
+            }
+        }
+    </style>
+</head>
+<body>
+    <h2>SOCH COLLEGE OF IT</h2>
+    <h4>Ranipauwa, Pokhara-11, Nepal | Tel: 061-543120, 574096</h4>
+
+    <table class="header-table">
+        <tr>
+            <td><strong>Invoice No:</strong>1</td>
+            <td><strong>Date:</strong>@Model.InvoiceDate</td>
+        </tr>
+        <tr>
+            <td><strong>Name of Student:</strong>@Model.StudentName</td>
+            <td><strong>Address:</strong> @Model.Address</td>
+        </tr>
+        <tr>
+            <td><strong>Class:</strong> @Model.ClassName</td>
+        </tr>
+        <tr>
+            <td><strong>Year:</strong> @Model.FiscalYear</td>
+            <td><strong>Mode of Payment:</strong> test</td>
+        </tr>
+    </table>
+
+    <table>
+        <thead>
+            <tr>
+                <th>S.N.</th>
+                <th>Particulars</th>
+                <th>Amount (Rs.)</th>
+            </tr>
+        </thead>
+        <tbody>
+            @{
+                int sn = 1;
+                foreach (var item in Model.FeeItems)
+                {
+                    <tr>
+                        <td>@sn</td>
+                        <td>@item.Name</td>
+                        <td>@String.Format("{0:N0}", item.Amount)</td>
+                    </tr>;
+                    sn++;
+                }
+            }
+            <tr>
+                <td colspan="2"><strong>Total</strong></td>
+                <td><strong>test</strong></td>
+            </tr>
+            <tr>
+                <td colspan="2"><strong>Discount</strong></td>
+                <td><strong>test</strong></td>
+            </tr>
+            <tr>
+                <td colspan="2"><strong>Net Total</strong></td>
+                <td><strong>test</strong></td>
+            </tr>
+        </tbody>
+    </table>
+
+    <p><strong>In Words:</strong> test</p>
+
+    <p><strong>Cash/Cheque/Phone Pay:</strong> test</p>
+    <p><strong>Bank:</strong> test</p>
+
+    <div class="footer">
+        <p><strong>Billed By:</strong> test</p>
+        <p><strong>Signature:</strong> ____________________</p>
+        <p><strong>For Soch College of IT</strong></p>
+    </div>
+
+    <div class="print-button">
+        <button onclick="window.print()">Print</button>
+    </div>
+</body>
+</html>
