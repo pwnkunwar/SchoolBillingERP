@@ -18,7 +18,7 @@
     <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js"></script>
     <script src="https://cdn.jsdelivr.net/npm/nepali-date-picker@2.0.2/dist/nepaliDatePicker.min.js"></script>
     <script src="https://cdn.jsdelivr.net/npm/select2@4.1.0-rc.0/dist/js/select2.min.js"></script>
-    <script src="~/js/custom.js"></script>
+    <script src="~/js/Excel.js"></script>
     <style>
         :root {
             --primary-color: #143a7a;
@@ -339,9 +339,9 @@
                     <li><hr class="dropdown-divider"></li>
                     <li><a class="dropdown-item" href="/Account/ChangeEmail">Change Email</a></li>
                     <li><hr class="dropdown-divider"></li>
-                    <li><a class="dropdown-item" href="/TwoFactorAuthentication/EnableAuthenticator">Configure 2FA</a></li>
+                    <li><a class="dropdown-item" href="/Account/EnableAuthenticator">Configure 2FA</a></li>
                     <li><hr class="dropdown-divider"></li>
-                    <li><a class="dropdown-item" href="/TwoFactorAuthentication/Disable2FA">Disbale 2FA</a></li>
+                    <li><a class="dropdown-item" href="/Account/Disable2FA">Disbale 2FA</a></li>
                     <li><hr class="dropdown-divider"></li>
                     <li><a class="dropdown-item text-danger" href="#" id="logoutBtn">Logout</a></li>
                 </ul>
@@ -363,12 +363,12 @@
                     <span class="sidebar-text">Dashboard</span>
                 </a>
             </li>
-
+           
             <!-- Consultancy -->
             <li class="sidebar-item">
                 <a href="#" class="sidebar-link" data-toggle="dropdown">
                     <i class="bi bi-gear sidebar-icon"></i>
-                    <span class="sidebar-text">School</span>
+                    <span class="sidebar-text">Student Management</span>
                     <i class="bi bi-chevron-right sidebar-arrow"></i>
                 </a>
                 <ul class="sidebar-dropdown">
@@ -379,30 +379,18 @@
                         </a>
                     </li>
                     <li class="sidebar-item">
-                        <a href="/Service/index" class="sidebar-link">
-                            <i class="bi bi-tools sidebar-icon"></i>
-                            <span class="sidebar-text">Add Services Type</span>
-                        </a>
-                    </li>
-                    <li class="sidebar-item">
-                        <a href="/Installments/Index" class="sidebar-link">
-                            <i class="bi bi-file-earmark-text sidebar-icon"></i>
-                            <span class="sidebar-text">Add Installment Type</span>
-                        </a>
-                    </li>
-                    <li class="sidebar-item">
-                        <a href="/Admin/AddClient" class="sidebar-link">
+                        <a href="/Student/Index" class="sidebar-link">
                             <i class="bi bi-person-plus sidebar-icon"></i>
-                            <span class="sidebar-text">Add Client</span>
+                            <span class="sidebar-text">Add Student</span>
                         </a>
                     </li>
                     <li class="sidebar-item">
-                        <a href="/Admin/GetAllClientService" class="sidebar-link">
+                        <a href="/Student/GetAllStudents" class="sidebar-link">
                             <i class="bi bi-people sidebar-icon"></i>
-                            <span class="sidebar-text">Client List</span>
+                            <span class="sidebar-text">Student's List</span>
                         </a>
                     </li>
-                    <li class="sidebar-item">
+                    @* <li class="sidebar-item">
                         <a href="/installmentsPayment/Index" class="sidebar-link">
                             <i class="bi bi-cash-stack sidebar-icon"></i>
                             <span class="sidebar-text">Installment Payment</span>
@@ -425,13 +413,14 @@
                             <i class="bi bi-file-text sidebar-icon"></i>
                             <span class="sidebar-text">Third Party Report</span>
                         </a>
-                    </li>
+                    </li> 
                     <li class="sidebar-item">
                         <a href="/Report/index" class="sidebar-link">
                             <i class="bi bi-file-earmark-bar-graph sidebar-icon"></i>
                             <span class="sidebar-text">All Payments Report</span>
                         </a>
                     </li>
+                    *@
                 </ul>
             </li>
 
@@ -439,35 +428,36 @@
             <li class="sidebar-item">
                 <a href="#" class="sidebar-link" data-toggle="dropdown">
                     <i class="bi bi-hammer sidebar-icon"></i>
-                    <span class="sidebar-text">Construction</span>
+                    <span class="sidebar-text">Billing Management</span>
                     <i class="bi bi-chevron-right sidebar-arrow"></i>
                 </a>
                 <ul class="sidebar-dropdown">
                     <li class="sidebar-item">
-                        <a href="/Construction/Index" class="sidebar-link">
+                        <a href="/FeeType/Index" class="sidebar-link">
                             <i class="bi bi-person-plus sidebar-icon"></i>
-                            <span class="sidebar-text">Add Construction Client</span>
+                            <span class="sidebar-text">Add Fee's Type</span>
                         </a>
                     </li>
                     <li class="sidebar-item">
-                        <a href="/Construction/InstallmentType" class="sidebar-link">
-                            <i class="bi bi-file-earmark-text sidebar-icon"></i>
-                            <span class="sidebar-text">Add Installment Type</span>
-                        </a>
-                    </li>
-                    <li class="sidebar-item">
-                        <a href="/Construction/ConstructionInstallmentPayment" class="sidebar-link">
-                            <i class="bi bi-cash-stack sidebar-icon"></i>
-                            <span class="sidebar-text">Installment Payment</span>
-                        </a>
-                    </li>
-                    <li class="sidebar-item">
-                        <a href="/Construction/InstallmentPaymentList" class="sidebar-link">
+                        <a href="/FiscalYear/Index" class="sidebar-link">
                             <i class="bi bi-list-check sidebar-icon"></i>
-                            <span class="sidebar-text">Installment Payment List</span>
+                            <span class="sidebar-text">Add Fiscal Year</span>
                         </a>
                     </li>
                     <li class="sidebar-item">
+                        <a href="/Billing/AddStudentFee" class="sidebar-link">
+                            <i class="bi bi-file-earmark-text sidebar-icon"></i>
+                            <span class="sidebar-text">Add Student Fee</span>
+                        </a>
+                    </li>
+                    <li class="sidebar-item">
+                        <a href="/Billing/GetStudentsFeeReports" class="sidebar-link">
+                            <i class="bi bi-cash-stack sidebar-icon"></i>
+                            <span class="sidebar-text">Student Fee Report</span>
+                        </a>
+                    </li>
+                    
+                    @* <li class="sidebar-item">
                         <a href="/Expense/Index" class="sidebar-link">
                             <i class="bi bi-wallet sidebar-icon"></i>
                             <span class="sidebar-text">Add Client Expenses</span>
@@ -484,7 +474,7 @@
                             <i class="bi bi-file-earmark-bar-graph sidebar-icon"></i>
                             <span class="sidebar-text">Overall Report</span>
                         </a>
-                    </li>
+                    </li> *@
                 </ul>
             </li>
         </ul>
