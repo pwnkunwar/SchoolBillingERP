@@ -95,8 +95,8 @@
 <div class="form-container">
     <h2 class="installment-header">Enter Student Payment</h2>
 
-    <form asp-action="CreateInstallmentPayment" method="post">
-        <!-- Client Dropdown -->
+    <form asp-action="AddStudentFee" method="post">
+        <!-- Class -->
         <div class="form-group">
             <label class="form-label">Select Class</label>
             <select asp-for="Id" asp-items="Model.Class" class="form-control select2-client" id="clientSelect">
@@ -104,19 +104,36 @@
             </select>
         </div>
 
+        <!-- Student -->
         <div class="form-group">
             <label class="form-label">Student Name</label>
-            <select asp-for="Id" class="form-control select2-installment" id="installmentSelect">
+            <select asp-for="StudentId" class="form-control select2-installment" id="installmentSelect">
                 <option value="">-- Select Student --</option>
             </select>
         </div>
+        <!-- Fiscal Year -->
+        <div class="form-group">
+            <label class="form-label">Select Fiscal Year</label>
+            <select asp-for="FiscalYearValue" asp-items="Model.FiscalYear" class="form-control">
+                <option value="">-- Select Fiscal Year --</option>
+            </select>
+        </div>
 
+        <!-- Fee Types -->
         <div class="form-group">
             <label class="form-label">Select Fee Types and Amounts</label>
-            <div id="fee-type-container">
-                <!-- Dynamically added FeeType rows will appear here -->
-            </div>
+            <div id="fee-type-container"></div>
             <button type="button" class="btn-add" id="addFeeType">Add Fee Type</button>
+        </div>
+
+        <!-- Fee Status -->
+        <div class="form-group">
+            <label class="form-label">Select Fee Status</label>
+            <select asp-for="FeeStatus" class="form-control">
+                <option value="">-- Select Status --</option>
+                <option value="Paid">Paid</option>
+                <option value="UnPaid">UnPaid</option>
+            </select>
         </div>
 
         <!-- Nepali Date -->
@@ -135,10 +152,7 @@
     <script src="https://cdn.jsdelivr.net/npm/select2@4.1.0-rc.0/dist/js/select2.min.js"></script>
     <script>
         $(document).ready(function () {
-            $('.select2-client, .select2-installment').select2({
-                allowClear: true,
-                width: '100%'
-            });
+            $('.select2-client, .select2-installment').select2({ allowClear: true, width: '100%' });
 
             $('#clientSelect').on('change', function () {
                 var classId = $(this).val();
@@ -153,7 +167,7 @@
                             $installmentSelect.empty().append('<option value="">-- Select Student --</option>');
                             students.forEach(function (item) {
                                 $installmentSelect.append(
-                                    $('<option></option>').val(item.classId).text(item.fullName)
+                                    $('<option></option>').val(item.studentId).text(item.fullName)
                                 );
                             });
                             $installmentSelect.trigger('change');
@@ -170,41 +184,58 @@
             let feeTypeIndex = 0;
             $('#addFeeType').on('click', function () {
                 var feeTypeRow = `
-                        <div class="fee-type-row row align-items-center mb-3" data-index="${feeTypeIndex}">
-                            <div class="col-md-5 mb-2 mb-md-0">
-                                <select name="FeeTypeSelections[${feeTypeIndex}].FeeTypeId" class="form-control select2-fee-type" required>
-                                    <option value="">-- Select Fee Type --</option>
-        @foreach (var feeType in Model.FeeTypes)
-        {
-                                            <option value="@feeType.Value">@feeType.Text</option>
-        }
-                                </select>
-                            </div>
-                            <div class="col-md-5 mb-2 mb-md-0">
-                                <input type="number" name="FeeTypeSelections[${feeTypeIndex}].Amount" class="form-control" placeholder="Amount" step="0.01" required />
-                            </div>
-                            <div class="col-md-2 text-md-end">
-                                <button type="button" class="btn btn-danger remove-fee-type w-100">Remove</button>
-                            </div>
-                        </div>`;
+                    <div class="fee-type-row row align-items-center mb-3" data-index="${feeTypeIndex}">
+                        <div class="col-md-4 mb-2 mb-md-0">
+                            <select name="FeeTypeSelections[${feeTypeIndex}].FeeTypeId" class="form-control select2-fee-type fee-type-selector" data-index="${feeTypeIndex}" required>
+                                <option value="">-- Select Fee Type --</option>
+                                @foreach (var feeType in Model.FeeTypes)
+                                {
+                                    <option value="@feeType.Value">@feeType.Text</option>
+                                }
+                            </select>
+                        </div>
+                        <div class="col-md-3 mb-2 mb-md-0">
+                                            <input type="number" name="FeeTypeSelections[${feeTypeIndex}].Amount" class="form-control" placeholder="Amount" step="0.01" required />
+                        </div>
+                        <div class="col-md-3 mb-2 mb-md-0">
+                                            <select name="FeeTypeSelections[${feeTypeIndex}].Month" class="form-control month-selector" style="display:none;">
+                                <option value="">-- Select Month --</option>
+                                <option value="Baisakh">Baisakh</option>
+                                <option value="Jestha">Jestha</option>
+                                <option value="Ashadh">Ashadh</option>
+                                <option value="Shrawan">Shrawan</option>
+                                <option value="Bhadra">Bhadra</option>
+                                <option value="Ashwin">Ashwin</option>
+                                <option value="Kartik">Kartik</option>
+                                <option value="Mangsir">Mangsir</option>
+                                <option value="Poush">Poush</option>
+                                <option value="Magh">Magh</option>
+                                <option value="Falgun">Falgun</option>
+                                <option value="Chaitra">Chaitra</option>
+                            </select>
+                        </div>
+                        <div class="col-md-2 text-md-end">
+                            <button type="button" class="btn btn-danger remove-fee-type w-100">Remove</button>
+                        </div>
+                    </div>`;
                 $('#fee-type-container').append(feeTypeRow);
-                $(`select[name="FeeTypeSelections[${feeTypeIndex}].FeeTypeId"]`).select2({ width: '100%' });
                 feeTypeIndex++;
             });
 
-            $('#fee-type-container').on('click', '.remove-fee-type', function () {
-                $(this).closest('.fee-type-row').remove();
+            $(document).on('change', '.fee-type-selector', function () {
+                var selectedFeeTypeText = $(this).find("option:selected").text().toLowerCase();
+                var index = $(this).data("index");
+                var $monthSelector = $(`select[name="FeeTypeSelections[${index}].Month"]`);
+
+                if (selectedFeeTypeText.includes("monthly")) {
+                    $monthSelector.show().attr("required", true);
+                } else {
+                    $monthSelector.hide().val('').removeAttr("required");
+                }
             });
 
-            $('.date-picker').nepaliDatePicker({
-                dateFormat: '%D, %M %d, %y',
-                closeOnDateSelect: true,
-                minDate: 'सोम, जेठ १०, २०७३',
-                maxDate: 'मंगल, जेठ ३२, ३०९९',
-                onChange: function (nepaliDate) {
-                    var englishDate = NepaliDateFunctions.BS2AD(nepaliDate);
-                    $('#englishDate').val(englishDate);
-                }
+            $(document).on('click', '.remove-fee-type', function () {
+                $(this).closest('.fee-type-row').remove();
             });
         });
     </script>
