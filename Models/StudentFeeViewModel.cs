@@ -14,6 +14,7 @@ namespace SchoolBillingERP.Models
         public string PaymentDate { get; set; }
         public string FeeStatus { get; set; }
         public string FiscalYearValue { get; set; }
+        public decimal DiscountAmount { get; set; }
 
     }
     public class FeeTypeSelection
