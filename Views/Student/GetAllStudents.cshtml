@@ -220,15 +220,15 @@
                         <td>@student.Status</td>
                         <td>
                             <div class="btn-group" role="group">
-                                <a asp-action="EditStudentDetails" asp-route-id="@student.StudentId" class="btn btn-primary-custom btn-sm">
+                                <a asp-action="EditStudentDetails" asp-route-id="@student.StudentId" class="btn btn-primary-custom btn-sm me-2">
                                     <i class="bi bi-pencil-square"></i> Edit
                                 </a>
                                 <a href="javascript:void(0)" onclick="confirmDelete('@student.StudentId')" class="btn btn-danger-custom btn-sm">
                                     <i class="bi bi-trash-fill"></i> Delete
                                 </a>
-
                             </div>
                         </td>
+
                     </tr>
                     index++;
                 }
