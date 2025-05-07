@@ -3,7 +3,20 @@
 @{
     ViewData["Title"] = "Student Fees Report";
     Layout = "~/Views/Shared/_Admin.cshtml";
-    var distinctMonths = Model.SelectMany(m => m.StudentFees).Select(f => f.Month).Distinct().OrderBy(m => m).ToList();
+
+    var distinctMonths = Model.SelectMany(m => m.StudentFees)
+                          .Where(f => f.Month != null)
+                          .Select(f => f.Month)
+                          .Distinct()
+                          .OrderBy(m => m)
+                          .ToList();
+
+    var feeTypes = Model.SelectMany(m => m.StudentFees).Select(f => f.FeeType).Distinct().ToList();
+    var monthFeeTypes = feeTypes.Where(ft =>
+        Model.Any(m => m.StudentFees.Any(f => f.FeeType == ft && !string.IsNullOrEmpty(f.Month)))
+    ).ToList();
+
+    var nonMonthFeeTypes = feeTypes.Except(monthFeeTypes).ToList();
 }
 
 <style>
@@ -55,20 +68,33 @@
             <table class="table table-bordered table-striped table-hover" id="PayrollGenerateTable">
                 <thead>
                     <tr>
-                        <th colspan="3">Student Info</th>
-                        <th colspan="@distinctMonths.Count">Payments Info</th>
-                        <th rowspan="2">Total Payable</th>
-                        <th rowspan="2" class="totalpaid">Total Paid</th>
-                        <th rowspan="2" class="totalrem">Remaining</th>
-                        <th rowspan="2">Status</th>
+                        <th colspan="4">Student Info</th>
+                        <th colspan="@(distinctMonths.Count + nonMonthFeeTypes.Count)">Payments Info</th>
+                        <th rowspan="3">Total Payable</th>
+                        <th rowspan="3" class="totalpaid">Total Paid</th>
+                        <th rowspan="3" class="totalrem">Remaining</th>
+                        <th rowspan="3">Status</th>
+                    </tr>
+                    <tr>
+                        <th></th>
+                        <th></th>
+                        <th></th>
+                        <th></th>
+                        <th colspan="@distinctMonths.Count">Monthly Fee</th>
+                        <th colspan="@nonMonthFeeTypes.Count">Other Fee</th>
                     </tr>
                     <tr>
                         <th>Sno</th>
                         <th>Student Name</th>
+                        <th>Class</th>
                         <th>Address</th>
                         @foreach (var month in distinctMonths)
                         {
                             <th>@month</th>
+                        }
+                        @foreach (var feeType in nonMonthFeeTypes)
+                        {
+                            <th>@feeType.Name</th>
                         }
                     </tr>
                 </thead>
@@ -87,12 +113,21 @@
                         <tr class="@rowClass" data-status="@status">
                             <td>@sn</td>
                             <td>@student.FullName</td>
+                            <td>@student.ClassName</td>
                             <td>@student.Address</td>
+
                             @foreach (var month in distinctMonths)
                             {
                                 var fee = student.StudentFees.FirstOrDefault(f => f.Month == month);
                                 <td>@(fee?.Amount ?? 0)</td>
                             }
+
+                            @foreach (var feeType in nonMonthFeeTypes)
+                            {
+                                var fee = student.StudentFees.FirstOrDefault(f => f.FeeType.Name == feeType.Name);
+                                <td>@(fee?.Amount ?? 0)</td>
+                            }
+
                             <td class="payable">@totalPayable</td>
                             <td class="paid">@totalPaid</td>
                             <td class="remaining">@remaining</td>
@@ -105,7 +140,7 @@
                 </tbody>
                 <tfoot>
                     <tr id="total-row-all" style="font-weight: bold; background: #d9edf7;">
-                        <td colspan="@(3 + distinctMonths.Count)">Total (All)</td>
+                        <td colspan="@(4 + distinctMonths.Count + nonMonthFeeTypes.Count)">Total (All)</td>
                         <td class="sum-payable"></td>
                         <td class="sum-paid"></td>
                         <td class="sum-remaining"></td>
