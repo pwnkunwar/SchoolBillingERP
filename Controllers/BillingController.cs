@@ -1,4 +1,5 @@
-﻿using Microsoft.AspNetCore.Mvc;
+﻿using Microsoft.AspNetCore.Authorization;
+using Microsoft.AspNetCore.Mvc;
 using Microsoft.AspNetCore.Mvc.Rendering;
 using Microsoft.EntityFrameworkCore;
 using SchoolBillingERP.Database;
@@ -6,6 +7,7 @@ using SchoolBillingERP.Models;
 
 namespace SchoolBillingERP.Controllers
 {
+   // [Authorize]
     public class BillingController : Controller
     {
         private readonly ApplicationDbContext _db;
