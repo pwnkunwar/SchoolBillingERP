@@ -100,29 +100,26 @@
                 }
             }
             <tr>
-                <td colspan="2"><strong>Total</strong></td>
-                <td><strong>test</strong></td>
+                <td colspan="2"><strong>Amount</strong></td>
+                <td><strong>@Model.Amount</strong></td>
             </tr>
             <tr>
-                <td colspan="2"><strong>Discount</strong></td>
-                <td><strong>test</strong></td>
+                <td colspan="2"><strong>Discount Amount</strong></td>
+                <td><strong>@Model.DiscountAmount</strong></td>
             </tr>
             <tr>
-                <td colspan="2"><strong>Net Total</strong></td>
-                <td><strong>test</strong></td>
+                <td colspan="2"><strong>Total Amount</strong></td>
+                <td><strong>@Model.TotalAmount</strong></td>
             </tr>
         </tbody>
     </table>
 
-    <p><strong>In Words:</strong> test</p>
+    <p><strong>In Words:</strong>@Model.TotalAmountWords</p>
 
-    <p><strong>Cash/Cheque/Phone Pay:</strong> test</p>
-    <p><strong>Bank:</strong> test</p>
+    <p><strong>Cash/Cheque/Phone Pay:</strong>@Model.ModeOfPayment</p>
 
     <div class="footer">
-        <p><strong>Billed By:</strong> test</p>
-        <p><strong>Signature:</strong> ____________________</p>
-        <p><strong>For Soch College of IT</strong></p>
+        <p><strong>Billed By:</strong>@Model.BilledBy</p>
     </div>
 
     <div class="print-button">
