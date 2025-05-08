@@ -245,15 +245,19 @@ public async Task<IActionResult> GenerateStudentBillAsync(StudentFeeViewModel st
             StudentName = studentInfo.FullName,
             ClassName = studentInfo.SchoolClass?.ClassName,
             Address = studentInfo.Address,
-            InvoiceDate = studentFeeView.PaymentDate,
+            InvoiceDate = DateTime.UtcNow.ToString("yyyy/MM/dd"),
             FeeItems = selectedFees.Select(fee => new FeeItem
             {
                 Name = fee.FeeType.Name,
                 Amount = fee.Amount
             }).ToList(),
+            FiscalYear = studentFeeView.FiscalYearValue,
+            ModeOfPayment = studentFeeView.ModeOfPayment,
             Amount = selectedFees.Sum(f => f.Amount),
             DiscountAmount = studentFeeView.DiscountAmount,
-            TotalAmount = selectedFees.Sum(f => f.Amount) - studentFeeView.DiscountAmount
+            BilledBy = studentFeeView.BilledBy,
+            TotalAmount = selectedFees.Sum(f => f.Amount) - studentFeeView.DiscountAmount,
+            TotalAmountWords = NumberToWords(selectedFees.Sum(f => f.Amount) - studentFeeView.DiscountAmount)
         };
 
         return View("PrintStudentBill", studentBill);
@@ -266,15 +270,93 @@ public async Task<IActionResult> GenerateStudentBillAsync(StudentFeeViewModel st
     }
 }
 
-       /* private async Task<int> GenerateInvoiceNumberAsync()
-        {
-            int lastInvoice = await _db.StudentBills
-                .OrderByDescending(b => b.InvoiceNumber)
-                .Select(b => b.InvoiceNumber)
-                .FirstOrDefaultAsync();
+        /* private async Task<int> GenerateInvoiceNumberAsync()
+         {
+             int lastInvoice = await _db.StudentBills
+                 .OrderByDescending(b => b.InvoiceNumber)
+                 .Select(b => b.InvoiceNumber)
+                 .FirstOrDefaultAsync();
 
-            return lastInvoice + 1;
-        }*/
+             return lastInvoice + 1;
+         }*/
+        public static string NumberToWords(decimal number)
+        {
+            if (number == 0)
+                return "Zero Only";
+
+            var parts = number.ToString("0.00").Split('.');
+            int rupees = int.Parse(parts[0]);
+            int paisa = int.Parse(parts[1]);
+
+            string words = "";
+
+            if (rupees > 0)
+                words += $"{NumberToWordsInt(rupees)} Rupees";
+
+            if (paisa > 0)
+                words += $" and {NumberToWordsInt(paisa)} Paisa";
+
+            return words + " Only";
+        }
+
+        private static string NumberToWordsInt(int number)
+        {
+            if (number == 0)
+                return "Zero";
+
+            if (number < 0)
+                return "Minus " + NumberToWordsInt(Math.Abs(number));
+
+            string[] unitsMap = { "Zero", "One", "Two", "Three", "Four", "Five", "Six", "Seven", "Eight", "Nine", "Ten",
+                          "Eleven", "Twelve", "Thirteen", "Fourteen", "Fifteen", "Sixteen", "Seventeen", "Eighteen", "Nineteen" };
+
+            string[] tensMap = { "Zero", "Ten", "Twenty", "Thirty", "Forty", "Fifty", "Sixty", "Seventy", "Eighty", "Ninety" };
+
+            string words = "";
+
+            if ((number / 10000000) > 0)
+            {
+                words += NumberToWordsInt(number / 10000000) + " Crore ";
+                number %= 10000000;
+            }
+
+            if ((number / 100000) > 0)
+            {
+                words += NumberToWordsInt(number / 100000) + " Lakh ";
+                number %= 100000;
+            }
+
+            if ((number / 1000) > 0)
+            {
+                words += NumberToWordsInt(number / 1000) + " Thousand ";
+                number %= 1000;
+            }
+
+            if ((number / 100) > 0)
+            {
+                words += NumberToWordsInt(number / 100) + " Hundred ";
+                number %= 100;
+            }
+
+            if (number > 0)
+            {
+                if (!string.IsNullOrEmpty(words))
+                    words += "and ";
+
+                if (number < 20)
+                    words += unitsMap[number];
+                else
+                {
+                    words += tensMap[number / 10];
+                    if ((number % 10) > 0)
+                        words += " " + unitsMap[number % 10];
+                }
+            }
+
+            return words.Trim();
+        }
+
+
 
     }
 }
