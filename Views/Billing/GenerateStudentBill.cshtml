@@ -126,15 +126,25 @@
             <button type="button" class="btn-add" id="addFeeType">Add Fee Type</button>
         </div>
 
-     
-
-        <!-- Nepali Date -->
         <div class="form-group">
-            <label class="form-label">Select Nepali Date</label>
-            <input type="text" asp-for="PaymentDate" class="form-control date-picker" />
-            <input type="hidden" name="EnglishDate" id="englishDate" />
+            <label class="form-label">Discount Amount if Any?</label>
+            <input type="text" asp-for="DiscountAmount" class="form-contro" />
+        </div>
+        <div class="form-group">
+            <label class="form-label">Mode Of Payments</label>
+            <select asp-for="ModeOfPayment" class="form-control">
+                <option value="">-- Select Modes --</option>
+                <option value="Cash">Cash</option>
+                <option value="Mobile Banking">Mobile Banking</option>
+                <option value="Cheque">Cheque</option>
+
+            </select>
         </div>
 
+        <div class="form-group">
+            <label class="form-label">Billed By</label>
+            <input type="text" asp-for="BilledBy" class="form-contro" />
+        </div>
         <button type="submit" class="btn-submit">Print</button>
     </form>
 </div>
