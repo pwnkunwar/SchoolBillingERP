@@ -74,20 +74,36 @@ namespace SchoolBillingERP.Controllers
         [HttpPost]
         public async Task<IActionResult> AddStudentFee(StudentFeeViewModel model)
         {
-            if (!ModelState.IsValid)
-                return View(model);
+            /*if (!ModelState.IsValid)
+                return View(model);*/
 
             try
             {
-                foreach(var fee in model.FeeTypeSelections)
+                
+
+                foreach (var fee in model.FeeTypeSelections)
                 {
+                    bool feeExists = await _db.StudentFees.AnyAsync(f =>
+               f.StudentId == model.StudentId &&
+               f.FeeTypeId == fee.FeeTypeId &&
+               f.Month == fee.Month &&
+               f.FiscalYear == model.FiscalYearValue
+           );
+                    if(feeExists)
+                    {
+                        var feeName = await _db.FeeTypes
+                            .Where(f => f.FeeTypeId == fee.FeeTypeId)
+                            .Select(f => f.Name)
+                            .FirstOrDefaultAsync();
+                        ModelState.AddModelError(string.Empty, $"A fee with the selected type and month already exists in the system.");
+                        return View(model);
+                    }
                     var studentFee = new StudentFee
                     {
                         StudentId = model.StudentId,
                         FeeTypeId = fee.FeeTypeId,
                         Amount = fee.Amount,
                         PaymentDate = model.PaymentDate,
-                        FeeStatus = model.FeeStatus,
                         FiscalYear = model.FiscalYearValue,
                         Month = fee.Month
                     };
@@ -114,9 +130,10 @@ namespace SchoolBillingERP.Controllers
                 var reports = await _db.Students
                     .Include(c => c.SchoolClass)
                     .Include(f => f.StudentFees)
-                    .ThenInclude(c => c.FeeType)
+                    .ThenInclude(f => f.FeeType)
                     .ToListAsync();
-                if(reports == null)
+
+                if (reports == null || !reports.Any())
                     return NoContent();
 
                 var studentFeeReports = reports.Select(student => new StudentFeeDetailsViewModel
@@ -124,23 +141,47 @@ namespace SchoolBillingERP.Controllers
                     FullName = student.FullName,
                     ClassName = student.SchoolClass?.ClassName,
                     Address = student.Address,
-                    StudentFees = student.StudentFees?.Select(fee => new StudentFee
+                    StudentFees = student.StudentFees.Select(fee => new StudentFee
                     {
                         FeeType = fee.FeeType,
                         Amount = fee.Amount,
                         Month = fee.Month,
                         PaymentDate = fee.PaymentDate
-                    }).ToList() ?? new List<StudentFee>()
+                    }).ToList()
                 }).ToList();
-                return View(studentFeeReports);
 
+                // Get distinct months & fee types for use in ViewBag
+                var allFees = reports.SelectMany(s => s.StudentFees).ToList();
+                var months = allFees.Where(f => !string.IsNullOrEmpty(f.Month))
+                                    .Select(f => f.Month)
+                                    .Distinct()
+                                    .OrderBy(m => m)
+                                    .ToList();
+
+                var feeTypes = allFees.Select(f => f.FeeType)
+                                      .Where(ft => ft != null)
+                                      .Distinct()
+                                      .ToList();
+
+                var monthlyFeeTypes = feeTypes
+                    .Where(ft => allFees.Any(f => f.FeeTypeId == ft.FeeTypeId && !string.IsNullOrEmpty(f.Month)))
+                    .ToList();
+
+                var nonMonthlyFeeTypes = feeTypes.Except(monthlyFeeTypes).ToList();
+
+                ViewBag.Months = months;
+                ViewBag.MonthlyFeeTypes = monthlyFeeTypes;
+                ViewBag.NonMonthlyFeeTypes = nonMonthlyFeeTypes;
+
+                return View(studentFeeReports);
             }
-            catch(Exception ex)
+            catch (Exception ex)
             {
                 Console.WriteLine(ex.Message);
-                return View(Index);
+                return View("Index");
             }
         }
+
 
         [HttpGet]   
         public IActionResult GenerateStudentBill()
@@ -174,101 +215,126 @@ namespace SchoolBillingERP.Controllers
             return View(model);
         }
         [HttpPost]
-        [HttpPost]
-public async Task<IActionResult> GenerateStudentBillAsync(StudentFeeViewModel studentFeeView)
-{
-    if(studentFeeView == null)
-    {
-        return NotFound();
-    }
-
-    try
-    {
-        var studentInfo = await _db.Students
-            .Include(c => c.SchoolClass)
-            .Include(f => f.StudentFees)
-            .ThenInclude(c => c.FeeType)
-            .FirstOrDefaultAsync(c => c.StudentId == studentFeeView.StudentId);
-
-        var selectedFeeTypeIds = studentFeeView.FeeTypeSelections.Select(f => f.FeeTypeId).ToList();
-
-        foreach (var selectedFeeTypeId in selectedFeeTypeIds)
+        public async Task<IActionResult> GenerateStudentBillAsync(StudentFeeViewModel studentFeeView)
         {
-            if (_db.FeeTypes.Any(f => f.FeeTypeId == selectedFeeTypeId) == false)
+            if (studentFeeView == null)
             {
-                ModelState.AddModelError(string.Empty, "Invalid fee type selected.");
-                return View(studentFeeView);
+                return NotFound();
             }
 
-            var selectedFeeType = await _db.FeeTypes
-                .FirstOrDefaultAsync(f => f.FeeTypeId == selectedFeeTypeId);
-
-            if (selectedFeeType.Name != null)
+            try
             {
-                // Create a temporary list to hold the new FeeTypeSelections
+                var studentInfo = await _db.Students
+                    .Include(c => c.SchoolClass)
+                    .Include(f => f.StudentFees)
+                        .ThenInclude(c => c.FeeType)
+                    .FirstOrDefaultAsync(c => c.StudentId == studentFeeView.StudentId);
+
+                if (studentInfo == null)
+                {
+                    ModelState.AddModelError(string.Empty, "Student not found.");
+                    return View(studentFeeView);
+                }
+
+                if (studentFeeView.FeeTypeSelections == null)
+                {
+                    studentFeeView.FeeTypeSelections = new List<FeeTypeSelection>();
+                }
+
+                var selectedFeeTypeIds = studentFeeView.FeeTypeSelections
+                    .Select(f => f.FeeTypeId)
+                    .Distinct()
+                    .ToList();
+
+                // Prepare a new list to hold processed fee selections
                 var newFeeSelections = new List<FeeTypeSelection>();
 
-                foreach (var months in studentFeeView.FeeTypeSelections)
+                foreach (var selectedFeeTypeId in selectedFeeTypeIds)
                 {
-                    if (months.Month == null || !months.Month.Any())
+                    if (!_db.FeeTypes.Any(f => f.FeeTypeId == selectedFeeTypeId))
                     {
-                        ModelState.AddModelError(string.Empty, "Please select at least one month.");
+                        ModelState.AddModelError(string.Empty, "Invalid fee type selected.");
                         return View(studentFeeView);
                     }
 
-                    var monthsList = months.Month; // List of selected months
-                    foreach (var month in monthsList)
+                    var selectedFeeType = await _db.FeeTypes
+                        .FirstOrDefaultAsync(f => f.FeeTypeId == selectedFeeTypeId);
+
+                    if (selectedFeeType?.Name != null)
                     {
-                        var fee = new FeeTypeSelection
+                        foreach (var months in studentFeeView.FeeTypeSelections.Where(x => x.FeeTypeId == selectedFeeTypeId))
                         {
-                            FeeTypeId = selectedFeeTypeId,
-                            Amount = months.Amount,
-                            Month = month.ToString()
-                        };
-                        newFeeSelections.Add(fee);
+                            if (string.IsNullOrWhiteSpace(months.Month) || !months.Month.Any())
+                            {
+                                newFeeSelections.Add(new FeeTypeSelection
+                                {
+                                    FeeTypeId = selectedFeeTypeId,
+                                    Amount = months.Amount
+                                });
+                            }
+                            else
+                            {
+                                // Split the comma-separated Month string into individual months
+                                var monthList = months.Month.Split(',', StringSplitOptions.RemoveEmptyEntries)
+                                                      .Select(m => m.Trim())
+                                                      .ToList();
+
+                                foreach (var month in monthList)
+                                {
+                                    newFeeSelections.Add(new FeeTypeSelection
+                                    {
+                                        FeeTypeId = selectedFeeTypeId,
+                                        Amount = months.Amount,
+                                        Month = month
+                                    });
+                                }
+                            }
+                        }
                     }
                 }
 
-                // Now add all the new fee selections after the loop ends
-                studentFeeView.FeeTypeSelections.AddRange(newFeeSelections);
+                // Replace original selections with the new processed list
+                studentFeeView.FeeTypeSelections = newFeeSelections;
+
+                // Filter student fees based on FeeTypeId and Month
+                var selectedFees = studentInfo.StudentFees
+                    .Where(f => selectedFeeTypeIds.Contains(f.FeeTypeId) &&
+                                studentFeeView.FeeTypeSelections.Select(s => s.Month).Contains(f.Month))
+                    .ToList();
+
+                var totalAmount = selectedFees.Sum(f => f.Amount);
+                var discount = studentFeeView.DiscountAmount;
+                var netTotal = totalAmount - discount;
+
+                var studentBill = new StudentBill
+                {
+                    StudentName = studentInfo.FullName,
+                    ClassName = studentInfo.SchoolClass?.ClassName,
+                    Address = studentInfo.Address,
+                    InvoiceDate = DateTime.UtcNow.ToString("yyyy/MM/dd"),
+                    FeeItems = selectedFees.Select(fee => new FeeItem
+                    {
+                        Name = fee.FeeType.Name,
+                        Amount = fee.Amount
+                    }).ToList(),
+                    FiscalYear = studentFeeView.FiscalYearValue,
+                    ModeOfPayment = studentFeeView.ModeOfPayment,
+                    Amount = totalAmount,
+                    DiscountAmount = discount,
+                    BilledBy = studentFeeView.BilledBy,
+                    TotalAmount = netTotal,
+                    TotalAmountWords = NumberToWords(netTotal)
+                };
+
+                return View("PrintStudentBill", studentBill);
+            }
+            catch (Exception ex)
+            {
+                // Log the exception (if you have logging setup)
+                ModelState.AddModelError(string.Empty, "An error occurred while generating the bill.");
+                return View(studentFeeView);
             }
         }
-
-        var selectedFees = studentInfo.StudentFees
-            .Where(f => selectedFeeTypeIds.Contains(f.FeeTypeId) && studentFeeView.FeeTypeSelections
-                .Select(fee => fee.Month)
-                .Contains(f.Month))
-            .ToList();
-
-        var studentBill = new StudentBill
-        {
-            StudentName = studentInfo.FullName,
-            ClassName = studentInfo.SchoolClass?.ClassName,
-            Address = studentInfo.Address,
-            InvoiceDate = DateTime.UtcNow.ToString("yyyy/MM/dd"),
-            FeeItems = selectedFees.Select(fee => new FeeItem
-            {
-                Name = fee.FeeType.Name,
-                Amount = fee.Amount
-            }).ToList(),
-            FiscalYear = studentFeeView.FiscalYearValue,
-            ModeOfPayment = studentFeeView.ModeOfPayment,
-            Amount = selectedFees.Sum(f => f.Amount),
-            DiscountAmount = studentFeeView.DiscountAmount,
-            BilledBy = studentFeeView.BilledBy,
-            TotalAmount = selectedFees.Sum(f => f.Amount) - studentFeeView.DiscountAmount,
-            TotalAmountWords = NumberToWords(selectedFees.Sum(f => f.Amount) - studentFeeView.DiscountAmount)
-        };
-
-        return View("PrintStudentBill", studentBill);
-    }
-    catch (Exception ex)
-    {
-        // Handle exceptions
-        ModelState.AddModelError(string.Empty, "An error occurred while generating the bill.");
-        return View(studentFeeView);
-    }
-}
 
         /* private async Task<int> GenerateInvoiceNumberAsync()
          {
