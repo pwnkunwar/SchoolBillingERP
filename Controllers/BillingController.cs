@@ -7,7 +7,7 @@ using SchoolBillingERP.Models;
 
 namespace SchoolBillingERP.Controllers
 {
-   // [Authorize]
+   [Authorize]
     public class BillingController : Controller
     {
         private readonly ApplicationDbContext _db;
@@ -335,6 +335,150 @@ namespace SchoolBillingERP.Controllers
                 return View(studentFeeView);
             }
         }
+        [HttpGet]
+        public IActionResult EditStudentsFeeReports()
+        {
+            List<SchoolClass> schoolClass = _db.SchoolClasses.ToList();
+            var model = new StudentFeeViewModel
+            {
+                /*Students = _db.Students.Select(c => new SelectListItem
+                {
+                    Value = c.StudentId.ToString(),
+                    Text = c.FullName
+                }).ToList(),*/
+                FiscalYear = _db.FiscalYears.Select(c => new SelectListItem
+                {
+                    Value = c.Name,
+                    Text = c.Name
+                }).ToList(),
+
+                FeeTypes = _db.FeeTypes.Select(c => new SelectListItem
+                {
+                    Value = c.FeeTypeId.ToString(),
+                    Text = c.Name
+                }).ToList(),
+
+                Class = schoolClass.Select(i => new SelectListItem
+                {
+                    Value = i.ClassId.ToString(),
+                    Text = i.ClassName
+                }).ToList()
+            };
+            return View(model);
+        }
+
+        [HttpGet]
+        public JsonResult GetStudentInfoJson(Guid classId, Guid studentId, string fiscalYear)
+        {
+            var student = _db.Students
+                .Include(s => s.StudentFees)
+                .ThenInclude(f => f.FeeType)
+                .FirstOrDefault(s => s.StudentId == studentId && s.ClassId == classId);
+
+            if (student == null)
+                return Json(null);
+
+            var studentInfo = new
+            {
+                StudentId = student.StudentId,
+                FullName = student.FullName,
+                Address = student.Address,
+                Fees = student.StudentFees
+                    .Where(f => f.FiscalYear == fiscalYear) // adjust this line based on your schema
+                    .Select(f => new 
+                    {
+                        Id = f.FeeTypeId,
+                        FeeTypeName = f.FeeType.Name,
+                        Month = f.Month,
+                        Amount = f.Amount,
+                        PaymentDate = f.PaymentDate
+                    }).ToList()
+            };
+
+            return Json(studentInfo);
+        }
+
+        [HttpPost]
+        public IActionResult UpdateStudentFees(List<StudentFeeViewModel> fees)
+        {
+            if (fees == null || !fees.Any())
+            {
+                return BadRequest("No fees provided.");
+            }
+
+            foreach (var fee in fees)
+            {
+                // First, check if it's a monthly fee based on incoming month value
+                var eFee = _db.StudentFees.FirstOrDefault(f => f.FeeTypeId == fee.Id && f.StudentId == fee.StudentId);
+                bool isMonthlyFee = !string.IsNullOrEmpty(eFee.Month);
+
+                StudentFee existingFee;
+
+                if (isMonthlyFee)
+                {
+                    // Match by student, fee type, and month
+                    existingFee = _db.StudentFees.FirstOrDefault(f =>
+                        f.StudentId == fee.StudentId &&
+                        f.FeeTypeId == fee.Id &&
+                        f.Month == fee.Month);
+                }
+                else
+                {
+                    // Match by student and fee type only
+                    existingFee = _db.StudentFees.FirstOrDefault(f =>
+                        f.StudentId == fee.StudentId &&
+                        f.FeeTypeId == fee.Id &&
+                        string.IsNullOrEmpty(f.Month));
+                }
+
+                if (existingFee != null)
+                {
+                    existingFee.Amount = fee.Amount;
+                   // existingFee.PaymentDate = fee.PaymentDate; // If you want to update date too
+                }
+            }
+
+            _db.SaveChanges();
+            return Ok("Fees updated successfully.");
+        }
+        [HttpPost]
+        public IActionResult DeleteStudentFee(Guid id, Guid studentId, string month)
+        {
+            if(id == Guid.Empty || studentId == Guid.Empty)
+            {
+                return BadRequest("Invalid input.");
+            }
+            if (string.IsNullOrEmpty(month))
+            {
+                var feeDetails = _db.StudentFees.FirstOrDefault(fe => fe.StudentId == studentId && fe.FeeTypeId == id);
+                if (feeDetails == null)
+                {
+                    return NotFound();
+                }
+                _db.StudentFees.Remove(feeDetails);
+
+            }
+            else
+            {
+                var monthlyFeeDetails = _db.StudentFees.FirstOrDefault(fe => fe.StudentId == studentId && fe.FeeTypeId == id && fe.Month == month);
+                if (monthlyFeeDetails == null)
+                {
+                    return NotFound();
+                }
+                _db.StudentFees.Remove(monthlyFeeDetails);
+            }
+            _db.SaveChanges();
+
+            /*var fee = _db.StudentFees.FirstOrDefault(f => f. == id);
+            if (fee == null) return NotFound();
+
+            _db.StudentFees.Remove(fee);
+            _db.SaveChanges();
+*/
+            return Ok();
+        }
+
+
 
         /* private async Task<int> GenerateInvoiceNumberAsync()
          {
