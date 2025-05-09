@@ -1,0 +1,245 @@
+﻿@model StudentFeeViewModel
+@{
+    ViewData["Title"] = "Admin";
+    Layout = "~/Views/Shared/_Admin.cshtml";
+}
+
+<link href="https://cdn.jsdelivr.net/npm/select2@4.1.0-rc.0/dist/css/select2.min.css" rel="stylesheet" />
+<script src="https://cdn.jsdelivr.net/npm/select2@4.1.0-rc.0/dist/js/select2.min.js"></script>
+
+<style>
+    .form-label {
+        color: #143a7a;
+        font-weight: 500;
+        margin-bottom: 8px;
+        display: block;
+    }
+
+    .form-control {
+        border: 1px solid #ced4da;
+        border-radius: 4px;
+        padding: 8px 12px;
+        height: 40px;
+        width: 100%;
+    }
+
+    .btn-submit {
+        background-color: #143a7a;
+        border-color: #143a7a;
+        color: white !important;
+        padding: 10px 25px;
+        border-radius: 4px;
+        margin-top: 20px;
+        width: 100%;
+    }
+
+    .form-group {
+        margin-bottom: 20px;
+    }
+
+    .form-container {
+        margin: 0 auto;
+        padding: 25px;
+    }
+
+    .info-box {
+        background-color: #f8f9fa;
+        border: 1px solid #dee2e6;
+        padding: 15px;
+        border-radius: 8px;
+        margin-top: 20px;
+    }
+</style>
+
+<div class="form-container">
+    <h2 class="installment-header">Enter Student Payment</h2>
+    <form asp-action="GenerateStudentBill" method="post">
+        <div class="form-group">
+            <label class="form-label">Select Class</label>
+            <select asp-for="Id" asp-items="Model.Class" class="form-control select2-client" id="clientSelect">
+                <option value="">-- Select Class --</option>
+            </select>
+        </div>
+
+        <div class="form-group">
+            <label class="form-label">Student Name</label>
+            <select asp-for="StudentId" class="form-control select2-installment" id="installmentSelect">
+                <option value="">-- Select Student --</option>
+            </select>
+        </div>
+
+        <div class="form-group">
+            <label class="form-label">Select Fiscal Year</label>
+            <select asp-for="FiscalYearValue" asp-items="Model.FiscalYear" class="form-control" id="fiscalYearSelect">
+                <option value="">-- Select Fiscal Year --</option>
+            </select>
+        </div>
+
+    </form>
+
+    <div id="studentInfo" class="info-box" style="display:none;"></div>
+
+    <div id="studentFeesSection" class="info-box mt-4" style="display:none;">
+        <h5>Monthly Fee Details</h5>
+        <form id="feeEditForm" action="UpdateStudentFees">
+            <table class="table table-bordered">
+                <thead>
+                    <tr>
+                        <th>Fee Type</th>
+                        <th>Month</th>
+                        <th>Amount</th>
+                        <th>Actions</th>
+                    </tr>
+                </thead>
+                <tbody id="feeTableBody"></tbody>
+            </table>
+            <button type="submit" class="btn btn-success">Save Changes</button>
+        </form>
+    </div>
+</div>
+
+@section Scripts {
+    <script>
+        function deleteFeeRow(button, feeId, studentId, month) {
+            if (!confirm('Are you sure you want to delete this fee entry?')) return;
+
+            $.ajax({
+                url: '@Url.Action("DeleteStudentFee", "Billing")',
+                type: 'POST',
+                data: {
+                    id: feeId,
+                    studentId: studentId,
+                    month: month
+                },
+                success: function () {
+                    $(button).closest('tr').remove();
+                    alert("Fee deleted successfully.");
+                },
+                error: function () {
+                    alert("Failed to delete fee.");
+                }
+            });
+        }
+
+    </script>
+    <script>
+        function loadStudentInfo() {
+            const classId = $('#clientSelect').val();
+            const studentId = $('#installmentSelect').val();
+            const fiscalYear = $('#fiscalYearSelect').val();
+
+            if (classId && studentId && fiscalYear) {
+                $.ajax({
+                    url: '@Url.Action("GetStudentInfoJson", "Billing")',
+                    type: 'GET',
+                    data: { classId, studentId, fiscalYear },
+                    success: function (data) {
+                        // Clear previous data
+                        $('#studentInfo').empty();
+                        $('#feeTableBody').empty();
+                        $('#studentFeesSection').hide();
+
+                        // Handle response data
+                        if (data) {
+                            // Display Student Info
+                            $('#studentInfo').html(`
+                                        <h5>Student Info</h5>
+                                        <p><strong>Name:</strong> ${data.fullName}</p>
+                                        <p><strong>Address:</strong> ${data.address || 'N/A'}</p>
+                                    `).show();
+
+                            // Display Fee Details if available
+                            if (data.fees && Array.isArray(data.fees)) {
+                                const feeRows = data.fees.map((fee, i) => `
+                                            <tr>
+                                                <td>${fee.feeTypeName}</td>
+                                                <td>${fee.month || 'N/A'}</td>
+                                                <td>
+                                                    <input type="number" name="fees[${i}].Amount" value="${fee.amount}" class="form-control" />
+                                                    <input type="hidden" name="fees[${i}].id" value="${fee.id}" />
+                                                    <input type="hidden" name="fees[${i}].month" value="${fee.month}" />
+                                                    <input type="hidden" name="fees[${i}].StudentId" value="${data.studentId}" />
+                                                </td>
+                                                        <td>
+                    <button type="button"
+            class="btn btn-danger btn-sm"
+            onclick="deleteFeeRow(this,'${fee.id}', '${data.studentId}', '${fee.month}')">
+            Delete
+        </button>
+
+        </td>
+                                            </tr>
+                                        `).join('');
+                                $('#feeTableBody').html(feeRows);
+                                $('#studentFeesSection').show();
+                            }
+                        } else {
+                            $('#studentInfo').html('<div class="text-warning">No data found.</div>').show();
+                        }
+                    },
+                    error: function () {
+                        $('#studentInfo').html('<div class="text-danger">Error fetching student info.</div>').show();
+                    }
+                });
+            } else {
+                $('#studentInfo, #studentFeesSection').hide();
+            }
+        }
+
+        $(document).ready(function () {
+            // Initialize Select2 for class and student selects
+            $('.select2-client, .select2-installment').select2({ allowClear: true, width: '100%' });
+
+            // Load students when class changes
+            $('#clientSelect').on('change', function () {
+                const classId = $(this).val();
+                const $studentSelect = $('#installmentSelect');
+
+                if (classId) {
+                    $.ajax({
+                        url: '@Url.Action("GetStudentsByClass", "Billing")',
+                        type: 'GET',
+                        data: { classId },
+                        success: function (students) {
+                            $studentSelect.empty().append('<option value="">-- Select Student --</option>');
+                            students.forEach(item => {
+                                $studentSelect.append(new Option(item.fullName, item.studentId));
+                            });
+                            $studentSelect.trigger('change');
+                        },
+                        error: function () {
+                            console.error('Failed to load students');
+                        }
+                    });
+                } else {
+                    $studentSelect.empty().append('<option value="">-- Select Student --</option>');
+                }
+                loadStudentInfo();
+            });
+
+            // Reload student info when student or fiscal year changes
+            $('#installmentSelect, #fiscalYearSelect').on('change', loadStudentInfo);
+
+            // Handle fee updates
+            $('#feeEditForm').on('submit', function (e) {
+                e.preventDefault();
+                const formData = $(this).serialize();
+
+                $.ajax({
+                    url: '@Url.Action("UpdateStudentFees", "Billing")',
+                    type: 'POST',
+                    data: formData,
+                    success: function () {
+                        alert("Fees updated successfully.");
+                    },
+                    error: function () {
+                        console.log('Error:', xhr, status, error);
+                        alert("Error updating fees.");
+                    }
+                });
+            });
+        });
+    </script>
+   
+
+}
