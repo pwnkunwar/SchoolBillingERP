@@ -1,4 +1,4 @@
-﻿﻿
+﻿@model Dashboard
 @{
     ViewData["Title"] = "Dashboard";
     Layout = "~/Views/Shared/_Admin.cshtml";
@@ -70,8 +70,8 @@
                 <div class="col-md-3">
                     <div class="card p-4 d-flex justify-content-between align-items-start">
                         <div>
-                            <div class="text-muted">Total Clients</div>
-                            <div class="metric-value"></div>
+                            <div class="text-muted">Total Students</div>
+                            <div class="metric-value">@Model.totalUsers</div>
                         </div>
                         <i class="bi bi-people-fill fs-2 text-primary"></i>
                     </div>
@@ -80,7 +80,7 @@
                     <div class="card p-4 d-flex justify-content-between align-items-start">
                         <div>
                             <div class="text-muted">Total Revenue</div>
-                            <div class="metric-value ">₹<span class="total_rev">  </span></div>
+                            <div class="metric-value ">Rs.<span class="total_rev">@Model.totalRevenue.ToString("N2")</span></div>
                         </div>
                         <i class="bi bi-currency-rupee fs-2 text-success"></i>
                     </div>
