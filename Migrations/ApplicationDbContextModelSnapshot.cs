@@ -319,10 +319,6 @@ namespace SchoolBillingERP.Migrations
                     b.Property<decimal>("Amount")
                         .HasColumnType("decimal(18,2)");
 
-                    b.Property<string>("FeeStatus")
-                        .IsRequired()
-                        .HasColumnType("nvarchar(max)");
-
                     b.Property<Guid>("FeeTypeId")
                         .HasColumnType("uniqueidentifier");
 
