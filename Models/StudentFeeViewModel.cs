@@ -12,11 +12,12 @@ namespace SchoolBillingERP.Models
         public List<SelectListItem> FiscalYear { get; set; } = new List<SelectListItem>();
         public decimal Amount { get; set; }
         public string PaymentDate { get; set; }
-        public string FeeStatus { get; set; }
+        public string? FeeStatus { get; set; }
         public string FiscalYearValue { get; set; }
         public decimal DiscountAmount { get; set; }
-        public string ModeOfPayment { get; set; }
-        public string BilledBy { get; set; }
+        public string? ModeOfPayment { get; set; }
+        public string? BilledBy { get; set; }
+        public string? Month { get; set; }
 
     }
     public class FeeTypeSelection
