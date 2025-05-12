@@ -1,9 +1,12 @@
-﻿using Microsoft.AspNetCore.Mvc;
+﻿using Microsoft.AspNetCore.Authorization;
+using Microsoft.AspNetCore.Mvc;
 using SchoolBillingERP.Database;
 using SchoolBillingERP.Models;
 
 namespace SchoolBillingERP.Controllers
 {
+    [Authorize]
+
     public class FiscalYearController : Controller
     {
         private readonly ApplicationDbContext _db;

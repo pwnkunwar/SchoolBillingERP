@@ -1,21 +1,36 @@
+using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
+using SchoolBillingERP.Database;
 using SchoolBillingERP.Models;
 using System.Diagnostics;
 
 namespace SchoolBillingERP.Controllers
 {
+    [Authorize]
+
     public class HomeController : Controller
     {
         private readonly ILogger<HomeController> _logger;
-
-        public HomeController(ILogger<HomeController> logger)
+        private readonly ApplicationDbContext _db;
+        public HomeController(ApplicationDbContext db,
+            ILogger<HomeController> logger)
         {
+            _db = db;
             _logger = logger;
-        }
 
+        }
+       
         public IActionResult Index()
         {
-            return View();
+            int users = _db.Students.Count();
+            decimal totalRevenue = _db.StudentFees.Sum(fe => fe.Amount);
+            Dashboard dashboard = new Dashboard()
+            { 
+                totalUsers = users,
+                totalRevenue = totalRevenue,
+            };
+
+            return View(dashboard);
         }
 
         public IActionResult Privacy()
